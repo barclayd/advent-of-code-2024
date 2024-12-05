@@ -1,76 +1,27 @@
 use std::fs;
-use std::collections::HashSet;
 
-fn get_position_of_word_in_grid(grid: &Vec<Vec<char>>, search_word: &str) -> Vec<(usize, usize)> {
-    let rows = grid.len();
-    let cols = grid[0].len();
-    let first_char = search_word.chars().next().unwrap();
-    let word_chars: Vec<char> = search_word.chars().collect();
+const CHARACTER_DIRECTIONS: [(i32, i32); 8] = [(-1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, 1), (1, -1)];
 
-    let mut results = Vec::new();
+fn get_word_count(grid: &Vec<Vec<char>>, x: usize, y: usize, search_word: &str) -> usize {
+    let mut count: usize = 0;
 
-    for row in 0..rows {
-        for col in 0..cols {
-            if grid[row][col] == first_char {
-                let found_positions = breadth_first_search(&grid, row, col, &word_chars);
-                results.extend(found_positions);
-            }
+    for (dx, dy) in CHARACTER_DIRECTIONS.iter() {
+        let mut word: Vec<char> = vec!['.'; search_word.len()];
+        for i in 0..search_word.len() {
+            word[i] = *grid
+                .get(x.wrapping_add((dx * i as i32) as usize))
+                .and_then(|c| c.get(y.wrapping_add((dy * i as i32) as usize)))
+                .unwrap_or(&'.');
+        }
+        if word.iter().collect::<String>() == search_word {
+            count += 1
         }
     }
 
-    results
+    count
 }
 
-fn breadth_first_search(grid: &Vec<Vec<char>>, start_row: usize, start_col: usize, word_chars: &[char]) -> Vec<(usize, usize)> {
-    let rows = grid.len();
-    let cols = grid[0].len();
-
-    let mut visited = HashSet::new();
-    let mut results = Vec::new();
-
-    let directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)];
-
-    for (dx, dy) in directions {
-        let mut current_visited = HashSet::new();
-        let mut current_path = vec![(start_row, start_col)];
-        current_visited.insert((start_row, start_col));
-        
-        let mut row = start_row;
-        let mut col = start_col;
-        let mut found = true;
-        
-        for i in 1..word_chars.len() {
-            let new_row = match (row as isize).checked_add(dx) {
-                Some(r) if r >= 0 && (r as usize) < rows => r as usize,
-                _ => { found = false; break }
-            };
-
-            let new_col = match (col as isize).checked_add(dy) {
-                Some(c) if c >= 0 && (c as usize) < cols => c as usize,
-                _ => { found = false; break }
-            };
-
-            if grid[new_row][new_col] != word_chars[i] {
-                found = false;
-                break;
-            }
-
-            current_path.push((new_row, new_col));
-            current_visited.insert((new_row, new_col));
-            row = new_row;
-            col = new_col;
-        }
-
-        if found {
-            results.push(current_path[0]);
-            visited.extend(current_visited);
-        }
-    }
-    
-    results
-}
-
-fn get_word_search_count(file_path: &str, search_word: &str) -> i32 {
+fn get_word_search_count(file_path: &str, search_word: &str) -> usize {
     let file_contents = fs::read_to_string(file_path)
         .expect("Should have been able to read the file");
 
@@ -79,8 +30,15 @@ fn get_word_search_count(file_path: &str, search_word: &str) -> i32 {
         .map(|line| line.chars().collect())
         .collect();
 
-    let positions = get_position_of_word_in_grid(&grid, search_word);
-    positions.len() as i32
+    let mut count = 0;
+
+    for row in 0..grid.len() {
+        for col in 0..grid[0].len() {
+            count += get_word_count(&grid, row, col, search_word)
+        }
+    }
+
+    count
 }
 
 fn get_word_search_from_x_formation_count(file_path: &str, search_word: &str) -> i32 {
