@@ -1,7 +1,7 @@
+use crate::Part::{Part1, Part2};
 use std::cmp::PartialEq;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use crate::Part::{Part1, Part2};
 
 #[derive(PartialEq, Debug)]
 enum Part {
@@ -55,31 +55,37 @@ fn is_valid_update_sequence(sequence: &[i32], graph: &HashMap<i32, HashSet<i32>>
 
 fn reorder_sequence(sequence: &[i32], graph: &HashMap<i32, HashSet<i32>>) -> Vec<i32> {
     let mut reordered_sequence: Vec<i32> = sequence.to_vec();
+    let mut changed = true;
 
-    for &page in sequence {
-        if let Some(prerequisites) = graph.get(&page) {
-            let mut relevant_prerequisites: Vec<_> = prerequisites
-            .iter()
-            .filter(|prerequisite| sequence.contains(prerequisite))
-                .copied()
-                .collect();
+    while changed {
+        changed = false;
+        for i in 0..reordered_sequence.len() {
+            let page = reordered_sequence[i];
+            if let Some(prerequisites) = graph.get(&page) {
+                let mut relevant_prerequisites: Vec<_> = prerequisites
+                    .iter()
+                    .filter(|&&prereq| reordered_sequence.contains(&prereq))
+                    .copied()
+                    .collect();
 
                 relevant_prerequisites.sort();
 
-            for &prerequisite in &relevant_prerequisites {
-                let current_pos = reordered_sequence.iter().position(|&p| p == prerequisite);
-                let page_pos = reordered_sequence.iter().position(|&p| p == page);
-                
-                if let (Some(curr_pos), Some(p_pos)) = (current_pos, page_pos) {
-                    if curr_pos > p_pos {
-                        reordered_sequence.remove(curr_pos);
-                        reordered_sequence.insert(p_pos, prerequisite);
+                for &prerequisite in &relevant_prerequisites {
+                    let prereq_pos = reordered_sequence
+                        .iter()
+                        .position(|&p| p == prerequisite)
+                        .unwrap();
+                    if prereq_pos > i {
+                        reordered_sequence.remove(prereq_pos);
+                        reordered_sequence.insert(i, prerequisite);
+                        changed = true;
+                        break;
                     }
                 }
             }
         }
     }
-    
+
     reordered_sequence
 }
 
@@ -123,11 +129,11 @@ fn get_sum_of_middle_pages_for_valid_sequences(file_path: &str, part: Part) -> i
             Some(get_middle_page(reordered_sequence.as_slice()))
         })
         .sum();
-    
+
     if part == Part::Part1 {
         return part_1;
     }
-    
+
     part_2
 }
 
@@ -168,6 +174,6 @@ mod tests {
     #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
         let sum_of_middle_pages = get_sum_of_middle_pages_for_valid_sequences("./input.txt", Part2);
-        assert_eq!(sum_of_middle_pages, 5390);
+        assert_eq!(sum_of_middle_pages, 5093);
     }
 }
