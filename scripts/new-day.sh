@@ -11,5 +11,7 @@ new_folder="day-$formatted_day"
 
 mkdir $new_folder
 cargo init $new_folder
+touch $new_folder/input.txt
+touch $new_folder/test.txt
 
 cp aoc.template.rs $new_folder/src/main.rs
