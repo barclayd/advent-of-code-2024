@@ -35,21 +35,38 @@ fn get_distinct_positions(file_path: &str) -> Vec<(usize, usize)> {
     
     let initial_map: Vec<Vec<char>> = file_contents.lines().map(|line| line.chars().collect()).collect();
     
-    simulate(&initial_map)
+    simulate(&initial_map).unwrap_or_else(|| Vec::new())
 }
 
-fn simulate(map: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
+fn get_obstruction_positions_count(file_path: &str) -> usize {
+    let file_contents =
+        fs::read_to_string(file_path).expect("Should have been able to read the file");
+
+    let initial_map: Vec<Vec<char>> = file_contents.lines().map(|line| line.chars().collect()).collect();
+    
+    simulate(&initial_map).unwrap().iter().filter(|(y, x)| {
+        let mut obstructed_map = initial_map.clone();
+        obstructed_map[*y][*x] = '#';
+        simulate(&mut obstructed_map).is_none()
+    }).count()
+}
+
+fn simulate(map: &Vec<Vec<char>>) -> Option<Vec<(usize, usize)>> {
     let (mut y, mut x) = locate_guard(map);
     let mut direction = Direction::Up;
     let mut distinct_positions = vec![vec![[false; 4]; map[0].len()]; map.len()];
 
     loop {
+        if distinct_positions[y as usize][x as usize][direction as usize] {
+            return None;
+        }
+        
         distinct_positions[y as usize][x as usize][direction as usize] = true;
         let (dy, dx) = direction.delta();
         
         match get_next_position(map, y + dy, x + dx) {
             ' ' => {
-                return get_visited_positions(map, &distinct_positions);
+                return Some(get_visited_positions(map, &distinct_positions));
             }
             '#' => direction = direction.turn_right(),
             _ => {
@@ -89,11 +106,13 @@ fn get_visited_positions(map: &Vec<Vec<char>>, distinct_positions: &Vec<Vec<[boo
 fn main() {
     let distinct_positions_count = get_distinct_positions("./input.txt").len();
     println!("Distinct positions: {}", distinct_positions_count);
+    let distinct_obstruction_positions_count = get_obstruction_positions_count("./input.txt");
+    println!("Distinct obstruction: {}", distinct_obstruction_positions_count);
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::get_distinct_positions;
+    use crate::{get_distinct_positions, get_obstruction_positions_count};
 
     #[test]
     fn returns_expected_distinct_positions_count_for_test_data() {
@@ -105,5 +124,17 @@ mod tests {
     fn returns_expected_distinct_positions_count_for_input_data() {
         let distinct_positions_count = get_distinct_positions("./input.txt").len();
         assert_eq!(distinct_positions_count, 4967);
+    }
+
+    #[test]
+    fn returns_expected_obstruction_positions_count_for_test_data() {
+        let distinct_obstruction_positions_count = get_obstruction_positions_count("./test.txt");
+        assert_eq!(distinct_obstruction_positions_count, 6);
+    }
+
+    #[test]
+    fn returns_expected_obstruction_positions_count_for_input_data() {
+        let distinct_obstruction_positions_count = get_obstruction_positions_count("./input.txt");
+        assert_eq!(distinct_obstruction_positions_count, 1789);
     }
 }
