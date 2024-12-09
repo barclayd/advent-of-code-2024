@@ -42,10 +42,12 @@ brew install pup
 ### Get input
 
 ```shell
-./scripts/load-input.sh
+./scripts/puzzle-input.sh
 ```
 
-This command auto generates your `input.txt` file.
+This command auto generates your `input.txt` file and places it in the latest day folder.
+
+For example, if you are working on a solution for Day 4, it will place it in `/day-04/input.txt`, ready to be used in your solution.
 
 It is to be run when you have understood the puzzle and your tests locally for `test.txt` are passing.
 
