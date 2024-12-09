@@ -20,17 +20,6 @@ cargo build
 cargo test
 ```
 
-## Running Solutions
-
-```bash
-# Run a specific day's solution
-cd day-XX
-cargo run
-
-# Run with release optimizations
-cargo run --release
-```
-
 ## Project Structure
 
 ```
