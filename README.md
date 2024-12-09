@@ -65,12 +65,13 @@ advent-of-code-2024/
 ## Progress (14/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
-|-----|---------------------------------------------------------------------|------|
-| 1   | [Historian Hysteria](https://adventofcode.com/2024/day/1)         | ⭐️⭐️ |
-| 2   | [Red-Nosed Reports](https://adventofcode.com/2024/day/2)          | ⭐️⭐️ |
-| 3   | [Mull It Over](https://adventofcode.com/2024/day/3)               | ⭐️⭐️ |
-| 4   | [Ceres Search](https://adventofcode.com/2024/day/4)               | ⭐️⭐️ |
-| 5   | [Print Queue](https://adventofcode.com/2024/day/5)                | ⭐️⭐️ |
-| 6   | [Guard Gallivant](https://adventofcode.com/2024/day/6)            | ⭐️⭐️ |
-| 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️ |
+|-----|---------------------------------------------------------------------|-------|
+| 1   | [Historian Hysteria](https://adventofcode.com/2024/day/1)         | ⭐️⭐️  |
+| 2   | [Red-Nosed Reports](https://adventofcode.com/2024/day/2)          | ⭐️⭐️  |
+| 3   | [Mull It Over](https://adventofcode.com/2024/day/3)               | ⭐️⭐️  |
+| 4   | [Ceres Search](https://adventofcode.com/2024/day/4)               | ⭐️⭐️  |
+| 5   | [Print Queue](https://adventofcode.com/2024/day/5)                | ⭐️⭐️  |
+| 6   | [Guard Gallivant](https://adventofcode.com/2024/day/6)            | ⭐️⭐️  |
+| 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️  |
 | 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐    |
+| 9   | [Disk Fragmenter](https://adventofcode.com/2024/day/9) | ⭐️★   |
