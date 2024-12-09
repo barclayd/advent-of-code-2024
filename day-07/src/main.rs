@@ -9,10 +9,9 @@ enum Part {
 }
 
 fn concatenation_operator(first_number: i64, second_number: i64) -> i64 {
-    let joined_number = format!("{}{}", first_number, second_number)
-    .parse()
-        .expect("Should have been able to parse the joined number");
-    joined_number
+    format!("{}{}", first_number, second_number)
+        .parse()
+        .expect("Should have been able to parse the joined number")
 }
 
 fn get_is_calibrated(numbers: &Vec<i64>, target: i64, part: &Part) -> bool {
