@@ -11,7 +11,6 @@ fn get_value(file_path: &str) -> i32 {
    8
 }
 
-
 fn main() {
     println!("Value: {}", get_value("./input.txt"));
 }
