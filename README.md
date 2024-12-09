@@ -27,8 +27,8 @@ Prerequisites:
 * Get your AoC Session Cookie
 
 This can be done by copying the value by going to https://adventofcode.com/ and opening Dev Tools.
-Chrome: "Application" => "Cookies" => "https://adventofcode.com/" => "session: value"
-Copy the value and paste it into the .env
+Chrome: `Application` => `Cookies` => `https://adventofcode.com/` => `session: <value>`
+Copy the value and paste it into a newly created `.env`, based on `.env.local`
 
 ```sh
 brew install pup
