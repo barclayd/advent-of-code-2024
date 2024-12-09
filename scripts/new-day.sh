@@ -1,6 +1,6 @@
 #!/bin/bash
 
-day=$(ls -d day-* 2>/dev/null | grep -o '[0-9]\+' | sort -n | tail -1)
+day=$(ls -d day-* 2>/dev/null | sed 's/day-0*//' | sort -n | tail -1)
 if [ -z "$day" ]; then
     day=0
 fi
@@ -15,7 +15,7 @@ touch $new_folder/test.txt
 
 cp aoc.template.rs $new_folder/src/main.rs
 
-export $(cat .env | xargs)
+export "$(cat .env | xargs)"
 
 url="https://adventofcode.com/2024/day/${day}"
 title="$(curl -s --cookie "session=${SESSION_COOKIE}" "$url" | pup 'article h2 text{}' | sed 's/--- Day [0-9]*: \(.*\) ---/\1/')"
