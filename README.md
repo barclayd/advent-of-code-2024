@@ -22,7 +22,13 @@ cargo test
 
 ## Start a new day
 
-Prerequisites: copy your session <value> from "Application" => "Cookies" => "https://adventofcode.com/" => "session: <value>" and paste it into a .env
+Prerequisites: 
+
+* Get your AoC Session Cookie
+
+This can be done by copying the value by going to https://adventofcode.com/ and opening Dev Tools.
+Chrome: `Application` => `Cookies` => `https://adventofcode.com/` => `session: <value>`
+Copy the value and paste it into a newly created `.env`, based on `.env.local`
 
 ```sh
 brew install pup
@@ -56,12 +62,12 @@ advent-of-code-2024/
 
 ## Progress (14/50 ⭐️)
 
-| Day | Stars | Link                                                                |
-|-----|-------|---------------------------------------------------------------------|
-| 1   | ⭐️⭐️  | [Day 1: Historian Hysteria](https://adventofcode.com/2024/day/1)    |
-| 2   | ⭐️⭐️  | [Day 2: Red-Nosed Reports](https://adventofcode.com/2024/day/2)     |
-| 3   | ⭐️⭐️  | [Day 3: Mull It Over](https://adventofcode.com/2024/day/3)          |
-| 4   | ⭐️⭐️  | [Day 4: Ceres Search](https://adventofcode.com/2024/day/4)          |
-| 5   | ⭐️⭐️  | [Day 5: Print Queue](https://adventofcode.com/2024/day/5)           |
-| 6   | ⭐️⭐️  | [Day 6: Guard Gallivant](https://adventofcode.com/2024/day/6)       |
-| 7   | ⭐️⭐️  | [Day 7: Bridge Repair](https://adventofcode.com/2024/day/7)         |
+| Day | Challenge                                                        | Stars |
+|-----|------------------------------------------------------------------|-------|
+| 1   | [Day 1: Historian Hysteria](https://adventofcode.com/2024/day/1) | ⭐️⭐️  |
+| 2   | [Day 2: Red-Nosed Reports](https://adventofcode.com/2024/day/2)  | ⭐️⭐️  |
+| 3   | [Day 3: Mull It Over](https://adventofcode.com/2024/day/3)       | ⭐️⭐️  |
+| 4   | [Day 4: Ceres Search](https://adventofcode.com/2024/day/4)       | ⭐️⭐️  |
+| 5   | [Day 5: Print Queue](https://adventofcode.com/2024/day/5)        | ⭐️⭐️  |
+| 6   | [Day 6: Guard Gallivant](https://adventofcode.com/2024/day/6)    | ⭐️⭐️  |
+| 7   | [Day 7: Bridge Repair](https://adventofcode.com/2024/day/7)      | ⭐️⭐️  |
