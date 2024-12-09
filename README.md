@@ -65,4 +65,3 @@ advent-of-code-2024/
 | 5   | ⭐️⭐️  | [Day 5: Print Queue](https://adventofcode.com/2024/day/5)           |
 | 6   | ⭐️⭐️  | [Day 6: Guard Gallivant](https://adventofcode.com/2024/day/6)       |
 | 7   | ⭐️⭐️  | [Day 7: Bridge Repair](https://adventofcode.com/2024/day/7)         |
-| 8   | ★★    | [Day 8: Resonant Collinearity](https://adventofcode.com/2024/day/8) |
