@@ -4,8 +4,12 @@
 &nbsp;
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=orange)](https://www.rust-lang.org/)
 
-
 Solutions for [Advent of Code 2024](https://adventofcode.com/2024) written in Rust 🦀
+
+## Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (2021 edition or later)
+- Cargo (comes with Rust)
 
 ## Getting Started
 
@@ -14,6 +18,28 @@ git clone https://github.com/barclayd/advent-of-code-2024.git
 cd advent-of-code-2024
 cargo build
 cargo test
+```
+
+## Running Solutions
+
+```bash
+# Run a specific day's solution
+cd day-XX
+cargo run
+
+# Run with release optimizations
+cargo run --release
+```
+
+## Project Structure
+
+```
+advent-of-code-2024/
+├── day-01/
+├── day-02/
+├── day-03/
+...
+└── README.md
 ```
 
 ## Progress (14/50 ⭐️)
