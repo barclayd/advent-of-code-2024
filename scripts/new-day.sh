@@ -19,4 +19,4 @@ export $(cat .env | xargs)
 
 url="https://adventofcode.com/2024/day/${day}"
 title="$(curl -s --cookie "session=${SESSION_COOKIE}" "$url" | pup 'article h2 text{}' | sed 's/--- Day [0-9]*: \(.*\) ---/\1/')"
-echo "| ${day} | ★★ | [Day ${day}: ${title}](https://adventofcode.com/2024/day/${day})      |" >> README.md
+echo "| ${day}   | [${title}](https://adventofcode.com/2024/day/${day}) | ★★ |" >> README.md
