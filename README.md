@@ -73,4 +73,4 @@ advent-of-code-2024/
 | 5   | [Print Queue](https://adventofcode.com/2024/day/5)                | ⭐️⭐️ |
 | 6   | [Guard Gallivant](https://adventofcode.com/2024/day/6)            | ⭐️⭐️ |
 | 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️ |
-| 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐★    |
+| 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐    |
