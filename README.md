@@ -22,7 +22,13 @@ cargo test
 
 ## Start a new day
 
-Prerequisites: copy your session <value> from "Application" => "Cookies" => "https://adventofcode.com/" => "session: <value>" and paste it into a .env
+Prerequisites: 
+
+* Get your AoC Session Cookie
+
+This can be done by copying the value by going to https://adventofcode.com/ and opening Dev Tools.
+Chrome: "Application" => "Cookies" => "https://adventofcode.com/" => "session: value"
+Copy the value and paste it into the .env
 
 ```sh
 brew install pup
