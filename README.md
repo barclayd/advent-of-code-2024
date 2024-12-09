@@ -20,6 +20,29 @@ cargo build
 cargo test
 ```
 
+## Start a new day
+
+Prerequisites: copy your session <value> from "Application" => "Cookies" => "https://adventofcode.com/" => "session: <value>" and paste it into a .env
+
+```sh
+brew install pup
+./scripts/new-day.sh
+```
+
+* This will generate a new folder with a template ready to be worked on, including test setup and a blank a `test.txt`.
+
+`test.txt` requires manual copying and pasting from the puzzle html at present
+
+### Get input
+
+```shell
+./scripts/load-input.sh
+```
+
+This command auto generates your `input.txt` file.
+
+It is to be run when you have understood the puzzle and your tests locally for `test.txt` are passing.
+
 ## Project Structure
 
 ```
@@ -33,12 +56,12 @@ advent-of-code-2024/
 
 ## Progress (14/50 ⭐️)
 
-| Day | Stars | Link                                                             |
-|-----|-------|------------------------------------------------------------------|
-| 1 | ⭐️⭐️ | [Day 1: Historian Hysteria](https://adventofcode.com/2024/day/1) |
-| 2 | ⭐️⭐️ | [Day 2: Red-Nosed Reports](https://adventofcode.com/2024/day/2)  |
-| 3 | ⭐️⭐️ | [Day 3: Mull It Over](https://adventofcode.com/2024/day/3)       |
-| 4 | ⭐️⭐️ | [Day 4: Ceres Search](https://adventofcode.com/2024/day/4)       |
-| 5 | ⭐️⭐️ | [Day 5: Print Queue](https://adventofcode.com/2024/day/5)        |
-| 6 | ⭐️⭐️ | [Day 6: Guard Gallivant](https://adventofcode.com/2024/day/6)    |
-| 7 | ⭐️⭐️ | [Day 7: Bridge Repair](https://adventofcode.com/2024/day/7)      |
+| Day | Stars | Link                                                                |
+|-----|-------|---------------------------------------------------------------------|
+| 1   | ⭐️⭐️  | [Day 1: Historian Hysteria](https://adventofcode.com/2024/day/1)    |
+| 2   | ⭐️⭐️  | [Day 2: Red-Nosed Reports](https://adventofcode.com/2024/day/2)     |
+| 3   | ⭐️⭐️  | [Day 3: Mull It Over](https://adventofcode.com/2024/day/3)          |
+| 4   | ⭐️⭐️  | [Day 4: Ceres Search](https://adventofcode.com/2024/day/4)          |
+| 5   | ⭐️⭐️  | [Day 5: Print Queue](https://adventofcode.com/2024/day/5)           |
+| 6   | ⭐️⭐️  | [Day 6: Guard Gallivant](https://adventofcode.com/2024/day/6)       |
+| 7   | ⭐️⭐️  | [Day 7: Bridge Repair](https://adventofcode.com/2024/day/7)         |
