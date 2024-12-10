@@ -18,9 +18,9 @@ fn get_value(file_path: &str, part: Part) -> i32 {
    if part == Part1 { 8 } else { 4 }
 }
 
-fn main() { 
-    println!("Value: {}", get_value("./input.txt", Part1));
-    println!("Value: {}", get_value("./input.txt", Part2));
+fn main() {
+    println!("Part 1 value: {}", get_value("./input.txt", Part1));
+    println!("Part 2 value: {}", get_value("./input.txt", Part2));
 }
 
 #[cfg(test)]
