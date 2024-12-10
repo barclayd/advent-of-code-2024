@@ -1,4 +1,11 @@
 use std::fs;
+use crate::Part::{Part1, Part2};
+
+#[derive(PartialEq, Debug)]
+enum Part {
+    Part1,
+    Part2,
+}
 
 fn read_filesystem(input: &str) -> Vec<u64> {
     let line = input.lines().next().expect("Input should not be empty");
@@ -34,7 +41,7 @@ fn defragment(disk: &mut Vec<u64>) {
     }
 }
 
-fn get_checksum(file_path: &str) -> u64 {
+fn get_checksum(file_path: &str, part: Part) -> u64 {
     let file_contents = fs::read_to_string(file_path)
         .expect("Should have been able to read the file");
 
@@ -49,22 +56,23 @@ fn get_checksum(file_path: &str) -> u64 {
 }
 
 fn main() {
-    println!("Value: {}", get_checksum("./test.txt"));
+    println!("Value: {}", get_checksum("./test.txt", Part1));
 }
 
 #[cfg(test)]
 mod tests {
     use crate::get_checksum;
+    use crate::Part::{Part1, Part2};
 
     #[test]
     fn returns_expected_value_test_data() {
-        let checksum = get_checksum("./test.txt");
+        let checksum = get_checksum("./test.txt", Part1);
         assert_eq!(checksum, 1928);
     }
 
     #[test]
     fn returns_expected_value_for_input_data() {
-        let checksum = get_checksum("./input.txt");
+        let checksum = get_checksum("./input.txt", Part1);
         assert_eq!(checksum, 6349606724455);
     }
 }
