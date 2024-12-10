@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 fn get_total_distance_between_lists(file_path: &str) -> i32 {
     let file_contents =
@@ -18,7 +18,9 @@ fn get_total_distance_between_lists(file_path: &str) -> i32 {
     lists.0.sort_unstable();
     lists.1.sort_unstable();
 
-    lists.0.iter()
+    lists
+        .0
+        .iter()
         .zip(lists.1.iter())
         .map(|(a, b)| (b - a).abs())
         .sum()
@@ -38,19 +40,18 @@ fn get_similarity_score_between_lists(file_path: &str) -> i32 {
         }
     }
 
-    let counts_1: HashMap<_, _> = lists.0.iter()
-        .fold(HashMap::new(), |mut map, &num| {
-            *map.entry(num).or_insert(0) += 1;
-            map
-        });
+    let counts_1: HashMap<_, _> = lists.0.iter().fold(HashMap::new(), |mut map, &num| {
+        *map.entry(num).or_insert(0) += 1;
+        map
+    });
 
-    let counts_2: HashMap<_, _> = lists.1.iter()
-        .fold(HashMap::new(), |mut map, &num| {
-            *map.entry(num).or_insert(0) += 1;
-            map
-        });
+    let counts_2: HashMap<_, _> = lists.1.iter().fold(HashMap::new(), |mut map, &num| {
+        *map.entry(num).or_insert(0) += 1;
+        map
+    });
 
-    counts_1.iter()
+    counts_1
+        .iter()
         .map(|(&num, &count1)| {
             let count2 = counts_2.get(&num).unwrap_or(&0);
             num * count1 * count2
@@ -59,13 +60,19 @@ fn get_similarity_score_between_lists(file_path: &str) -> i32 {
 }
 
 fn main() {
-    println!("Total distance between lists: {}", get_total_distance_between_lists("./input.txt"));
-    println!("Similarity score between lists: {}", get_similarity_score_between_lists("./input.txt"));
+    println!(
+        "Total distance between lists: {}",
+        get_total_distance_between_lists("./input.txt")
+    );
+    println!(
+        "Similarity score between lists: {}",
+        get_similarity_score_between_lists("./input.txt")
+    );
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_total_distance_between_lists, get_similarity_score_between_lists};
+    use crate::{get_similarity_score_between_lists, get_total_distance_between_lists};
 
     #[test]
     fn returns_expected_total_distance_between_lists_for_test_data() {
