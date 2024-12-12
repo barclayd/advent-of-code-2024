@@ -84,9 +84,46 @@ fn get_trailheads_score(file_path: &str, part: Part) -> usize {
             .map(|(y, x)| calculate_score(&map, (*y, *x)))
             .sum()
     } else {
-        4
+        get_trailheads(&map)
+            .iter()
+            .map(|(y, x)| get_rating(&map, (*y, *x)))
+            .sum()
     }
 }
+
+fn get_rating(map: &Vec<Vec<char>>, start: (usize, usize)) -> usize {
+    let mut score = 0;
+    let mut queue = VecDeque::new();
+    let mut seen = HashSet::new();
+
+    queue.push_back(Position::new(start.0, start.1));
+
+    while let Some(current_pos) = queue.pop_front() {
+        if !seen.insert(current_pos) {
+            continue;
+        }
+
+        if let Some((y, x)) = current_pos.to_usize() {
+            if map[y][x] == '9' {
+                return 1;
+            }
+        }
+
+        let current_value = get_value_at_position(map, current_pos)
+            .expect("Invalid position");
+
+        for direction in Direction::all() {
+            let next_pos = current_pos.move_in_direction(direction);
+            if let Some(next_value) = get_value_at_position(map, next_pos) {
+                if current_value + 1 == next_value {
+                    score += get_rating(map, next_pos.to_usize().unwrap());
+                }
+            }
+        }
+    }
+    score
+}
+
 
 fn get_trailheads(map: &Vec<Vec<char>>) -> Vec<(usize, usize)> {
     let mut trailheads = Vec::new();
@@ -166,12 +203,12 @@ mod tests {
     #[test]
     fn returns_expected_value_test_data_for_part_2() {
         let trailheads_score = get_trailheads_score("./test.txt", Part2);
-        assert_eq!(trailheads_score, 4);
+        assert_eq!(trailheads_score, 81);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
         let trailheads_score = get_trailheads_score("./input.txt", Part2);
-        assert_eq!(trailheads_score, 4);
+        assert_eq!(trailheads_score, 1960);
     }
 }
