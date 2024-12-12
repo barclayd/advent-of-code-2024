@@ -76,3 +76,4 @@ advent-of-code-2024/
 | 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐    |
 | 9   | [Disk Fragmenter](https://adventofcode.com/2024/day/9) | ⭐️⭐️  |
 | 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐   |
+| 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐   |
