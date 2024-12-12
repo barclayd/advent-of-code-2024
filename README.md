@@ -62,7 +62,7 @@ advent-of-code-2024/
 └── README.md
 ```
 
-## Progress (14/50 ⭐️)
+## Progress (18/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
 |-----|---------------------------------------------------------------------|-------|
@@ -75,3 +75,4 @@ advent-of-code-2024/
 | 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️  |
 | 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐    |
 | 9   | [Disk Fragmenter](https://adventofcode.com/2024/day/9) | ⭐️⭐️  |
+| 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐   |
