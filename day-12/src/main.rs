@@ -32,7 +32,14 @@ fn get_total_price_of_fencing(file_path: &str, part: Part) -> usize {
 
         total
     } else {
-        4
+        let mut total = 0;
+
+        while let Some(plot) = garden.keys().copied().next() {
+            let (area, perimeter) = find_plot_with_reduced_fencing(&mut garden, plot);
+            total += area * perimeter;
+        }
+
+        total
     }
 }
 
@@ -70,6 +77,94 @@ fn find_plot(garden: &mut HashMap<(i64, i64), char>, position: (i64, i64)) -> (u
     (visited.len(), perimeter)
 }
 
+fn find_plot_with_reduced_fencing(
+    garden: &mut HashMap<(i64, i64), char>,
+    position: (i64, i64),
+) -> (usize, usize) {
+    let mut stack = vec![position];
+    let mut visited = HashSet::new();
+    let plant = *garden.get(&position).unwrap();
+
+    garden.remove(&position);
+    while let Some(location) = stack.pop() {
+        if visited.insert(location) {
+            for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                let new_location = (location.0 + direction.0, location.1 + direction.1);
+                if let Some(new_position) = garden.get(&new_location) {
+                    if *new_position == plant {
+                        garden.remove(&new_location);
+                        stack.push(new_location);
+                    }
+                }
+            }
+        }
+    }
+
+    let mut edgelist = HashSet::new();
+
+    for plot in &visited {
+        for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+            let new_location = (plot.0 + direction.0, plot.1 + direction.1);
+            if !visited.contains(&new_location) {
+                edgelist.insert((*plot, new_location));
+            }
+        }
+    }
+
+    // let mut v = edgelist.iter().copied().collect::<Vec<_>>();
+    // v.sort_by(|a, b| a.1.cmp(&b.1));
+    let mut perimeter = 0;
+    loop {
+        if let Some(mut search) = edgelist.iter().copied().next() {
+            if search.0 .0 == search.1 .0 {
+                let mut new_edge = (
+                    (search.0 .0 - 1, search.0 .1),
+                    (search.1 .0 - 1, search.1 .1),
+                );
+                while edgelist.contains(&new_edge) {
+                    search = new_edge;
+                    new_edge = (
+                        (search.0 .0 - 1, search.0 .1),
+                        (search.1 .0 - 1, search.1 .1),
+                    )
+                }
+            } else {
+                let mut new_edge = (
+                    (search.0 .0, search.0 .1 - 1),
+                    (search.1 .0, search.1 .1 - 1),
+                );
+                while edgelist.contains(&new_edge) {
+                    search = new_edge;
+                    new_edge = (
+                        (search.0 .0, search.0 .1 - 1),
+                        (search.1 .0, search.1 .1 - 1),
+                    )
+                }
+            }
+            perimeter += 1;
+            if search.0 .0 == search.1 .0 {
+                while edgelist.remove(&search) {
+                    search = (
+                        (search.0 .0 + 1, search.0 .1),
+                        (search.1 .0 + 1, search.1 .1),
+                    )
+                }
+            } else {
+                while edgelist.remove(&search) {
+                    search = (
+                        (search.0 .0, search.0 .1 + 1),
+                        (search.1 .0, search.1 .1 + 1),
+                    )
+                }
+            }
+        } else {
+            break;
+        }
+    }
+
+    (visited.len(), perimeter)
+}
+
 fn main() {
     println!(
         "Part 1 value: {}",
@@ -101,12 +196,12 @@ mod tests {
     #[test]
     fn returns_expected_value_test_data_for_part_2() {
         let value = get_total_price_of_fencing("./test.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 1206);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
         let value = get_total_price_of_fencing("./input.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 821428);
     }
 }
