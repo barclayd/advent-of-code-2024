@@ -81,6 +81,19 @@ fn find_plot_with_reduced_fencing(
     garden: &mut HashMap<(i64, i64), char>,
     position: (i64, i64),
 ) -> (usize, usize) {
+    let (visited, _) = find_connected_plots(garden, position);
+    
+    let mut edgelist = build_edge_list(&visited);
+
+    let perimeter = calculate_reduced_perimeter(&mut edgelist);
+
+    (visited.len(), perimeter)
+}
+
+fn find_connected_plots(
+    garden: &mut HashMap<(i64, i64), char>,
+    position: (i64, i64),
+) -> (HashSet<(i64, i64)>, char) {
     let mut stack = vec![position];
     let mut visited = HashSet::new();
     let plant = *garden.get(&position).unwrap();
@@ -90,8 +103,8 @@ fn find_plot_with_reduced_fencing(
         if visited.insert(location) {
             for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
                 let new_location = (location.0 + direction.0, location.1 + direction.1);
-                if let Some(new_position) = garden.get(&new_location) {
-                    if *new_position == plant {
+                if let Some(&new_position_char) = garden.get(&new_location) {
+                    if new_position_char == plant {
                         garden.remove(&new_location);
                         stack.push(new_location);
                     }
@@ -100,69 +113,88 @@ fn find_plot_with_reduced_fencing(
         }
     }
 
-    let mut edgelist = HashSet::new();
+    (visited, plant)
+}
 
-    for plot in &visited {
+fn build_edge_list(visited: &HashSet<(i64, i64)>) -> HashSet<((i64, i64), (i64, i64))> {
+    let mut edgelist = HashSet::new();
+    
+    for &plot in visited {
         for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
             let new_location = (plot.0 + direction.0, plot.1 + direction.1);
             if !visited.contains(&new_location) {
-                edgelist.insert((*plot, new_location));
+                edgelist.insert((plot, new_location));
             }
         }
     }
+    
+    edgelist
+}
 
-    // let mut v = edgelist.iter().copied().collect::<Vec<_>>();
-    // v.sort_by(|a, b| a.1.cmp(&b.1));
+fn calculate_reduced_perimeter(edgelist: &mut HashSet<((i64, i64), (i64, i64))>) -> usize {
     let mut perimeter = 0;
-    loop {
-        if let Some(mut search) = edgelist.iter().copied().next() {
-            if search.0 .0 == search.1 .0 {
-                let mut new_edge = (
-                    (search.0 .0 - 1, search.0 .1),
-                    (search.1 .0 - 1, search.1 .1),
-                );
-                while edgelist.contains(&new_edge) {
-                    search = new_edge;
-                    new_edge = (
-                        (search.0 .0 - 1, search.0 .1),
-                        (search.1 .0 - 1, search.1 .1),
-                    )
-                }
-            } else {
-                let mut new_edge = (
-                    (search.0 .0, search.0 .1 - 1),
-                    (search.1 .0, search.1 .1 - 1),
-                );
-                while edgelist.contains(&new_edge) {
-                    search = new_edge;
-                    new_edge = (
-                        (search.0 .0, search.0 .1 - 1),
-                        (search.1 .0, search.1 .1 - 1),
-                    )
-                }
-            }
-            perimeter += 1;
-            if search.0 .0 == search.1 .0 {
-                while edgelist.remove(&search) {
-                    search = (
-                        (search.0 .0 + 1, search.0 .1),
-                        (search.1 .0 + 1, search.1 .1),
-                    )
-                }
-            } else {
-                while edgelist.remove(&search) {
-                    search = (
-                        (search.0 .0, search.0 .1 + 1),
-                        (search.1 .0, search.1 .1 + 1),
-                    )
-                }
-            }
+    
+    while let Some(initial_edge) = edgelist.iter().copied().next() {
+        let mut search = initial_edge;
+        
+        if search.0.0 == search.1.0 {
+            search = find_horizontal_line_start(edgelist, search);
         } else {
-            break;
+            search = find_vertical_line_start(edgelist, search);
         }
+        
+        if search.0.0 == search.1.0 {
+            remove_horizontal_line(edgelist, search);
+        } else {
+            remove_vertical_line(edgelist, search);
+        }
+        
+        perimeter += 1;
     }
+    
+    perimeter
+}
 
-    (visited.len(), perimeter)
+fn find_horizontal_line_start(
+    edgelist: &HashSet<((i64, i64), (i64, i64))>,
+    mut edge: ((i64, i64), (i64, i64)),
+) -> ((i64, i64), (i64, i64)) {
+    let mut new_edge = ((edge.0.0 - 1, edge.0.1), (edge.1.0 - 1, edge.1.1));
+    while edgelist.contains(&new_edge) {
+        edge = new_edge;
+        new_edge = ((edge.0.0 - 1, edge.0.1), (edge.1.0 - 1, edge.1.1));
+    }
+    edge
+}
+
+fn find_vertical_line_start(
+    edgelist: &HashSet<((i64, i64), (i64, i64))>,
+    mut edge: ((i64, i64), (i64, i64)),
+) -> ((i64, i64), (i64, i64)) {
+    let mut new_edge = ((edge.0.0, edge.0.1 - 1), (edge.1.0, edge.1.1 - 1));
+    while edgelist.contains(&new_edge) {
+        edge = new_edge;
+        new_edge = ((edge.0.0, edge.0.1 - 1), (edge.1.0, edge.1.1 - 1));
+    }
+    edge
+}
+
+fn remove_horizontal_line(
+    edgelist: &mut HashSet<((i64, i64), (i64, i64))>,
+    mut edge: ((i64, i64), (i64, i64)),
+) {
+    while edgelist.remove(&edge) {
+        edge = ((edge.0.0 + 1, edge.0.1), (edge.1.0 + 1, edge.1.1));
+    }
+}
+
+fn remove_vertical_line(
+    edgelist: &mut HashSet<((i64, i64), (i64, i64))>,
+    mut edge: ((i64, i64), (i64, i64)),
+) {
+    while edgelist.remove(&edge) {
+        edge = ((edge.0.0, edge.0.1 + 1), (edge.1.0, edge.1.1 + 1));
+    }
 }
 
 fn main() {
