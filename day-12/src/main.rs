@@ -44,49 +44,8 @@ fn get_total_price_of_fencing(file_path: &str, part: Part) -> usize {
 }
 
 fn find_plot(garden: &mut HashMap<(i64, i64), char>, position: (i64, i64)) -> (usize, usize) {
-    let mut stack = vec![position];
-    let mut visited = HashSet::new();
-    let plant = *garden.get(&position).unwrap();
-
-    garden.remove(&position);
-    while let Some(location) = stack.pop() {
-        if visited.insert(location) {
-            for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
-                let new_location = (location.0 + direction.0, location.1 + direction.1);
-                if let Some(new_position) = garden.get(&new_location) {
-                    if *new_position == plant {
-                        garden.remove(&new_location);
-                        stack.push(new_location);
-                    }
-                }
-            }
-        }
-    }
-
-    let mut perimeter = 0;
-
-    for plot in &visited {
-        for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
-            let new_location = (plot.0 + direction.0, plot.1 + direction.1);
-            if !visited.contains(&new_location) {
-                perimeter += 1;
-            }
-        }
-    }
-
-    (visited.len(), perimeter)
-}
-
-fn find_plot_with_reduced_fencing(
-    garden: &mut HashMap<(i64, i64), char>,
-    position: (i64, i64),
-) -> (usize, usize) {
     let (visited, _) = find_connected_plots(garden, position);
-    
-    let mut edgelist = build_edge_list(&visited);
-
-    let perimeter = calculate_reduced_perimeter(&mut edgelist);
-
+    let perimeter = calculate_perimeter(&visited);
     (visited.len(), perimeter)
 }
 
@@ -114,6 +73,34 @@ fn find_connected_plots(
     }
 
     (visited, plant)
+}
+
+fn calculate_perimeter(visited: &HashSet<(i64, i64)>) -> usize {
+    let mut perimeter = 0;
+    
+    for &plot in visited {
+        for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+            let new_location = (plot.0 + direction.0, plot.1 + direction.1);
+            if !visited.contains(&new_location) {
+                perimeter += 1;
+            }
+        }
+    }
+    
+    perimeter
+}
+
+fn find_plot_with_reduced_fencing(
+    garden: &mut HashMap<(i64, i64), char>,
+    position: (i64, i64),
+) -> (usize, usize) {
+    let (visited, _) = find_connected_plots(garden, position);
+    
+    let mut edgelist = build_edge_list(&visited);
+
+    let perimeter = calculate_reduced_perimeter(&mut edgelist);
+
+    (visited.len(), perimeter)
 }
 
 fn build_edge_list(visited: &HashSet<(i64, i64)>) -> HashSet<((i64, i64), (i64, i64))> {
