@@ -9,38 +9,37 @@ enum Part {
 }
 
 fn get_total_price_of_fencing(file_path: &str, part: Part) -> usize {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
+    let garden = load_garden_from_file(file_path);
+    calculate_total_price(garden, part)
+}
 
-    let mut grid: HashMap<(i64, i64), char> = HashMap::new();
+fn load_garden_from_file(file_path: &str) -> HashMap<(i64, i64), char> {
+    let file_contents = fs::read_to_string(file_path)
+        .expect("Should have been able to read the file");
 
-    for (row, line) in file_contents.lines().enumerate() {
-        for (col, char) in line.chars().enumerate() {
-            grid.insert((row as i64, col as i64), char);
-        }
+    file_contents
+        .lines()
+        .enumerate()
+        .flat_map(|(row, line)| {
+            line.chars()
+                .enumerate()
+                .map(move |(col, char)| ((row as i64, col as i64), char))
+        })
+        .collect()
+}
+
+fn calculate_total_price(mut garden: HashMap<(i64, i64), char>, part: Part) -> usize {
+    let mut total = 0;
+    
+    while let Some(plot) = garden.keys().copied().next() {
+        let (area, perimeter) = match part {
+            Part1 => find_plot(&mut garden, plot),
+            Part2 => find_plot_with_reduced_fencing(&mut garden, plot),
+        };
+        total += area * perimeter;
     }
-
-    let mut garden = grid.clone();
-
-    if part == Part1 {
-        let mut total = 0;
-
-        while let Some(plot) = garden.keys().copied().next() {
-            let (area, perimeter) = find_plot(&mut garden, plot);
-            total += area * perimeter;
-        }
-
-        total
-    } else {
-        let mut total = 0;
-
-        while let Some(plot) = garden.keys().copied().next() {
-            let (area, perimeter) = find_plot_with_reduced_fencing(&mut garden, plot);
-            total += area * perimeter;
-        }
-
-        total
-    }
+    
+    total
 }
 
 fn find_plot(garden: &mut HashMap<(i64, i64), char>, position: (i64, i64)) -> (usize, usize) {
@@ -49,30 +48,49 @@ fn find_plot(garden: &mut HashMap<(i64, i64), char>, position: (i64, i64)) -> (u
     (visited.len(), perimeter)
 }
 
+const DIRECTIONS: [(i64, i64); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+
 fn find_connected_plots(
     garden: &mut HashMap<(i64, i64), char>,
     position: (i64, i64),
 ) -> (HashSet<(i64, i64)>, char) {
-    let mut stack = vec![position];
-    let mut visited = HashSet::new();
     let plant = *garden.get(&position).unwrap();
+    let visited = explore_connected_positions(garden, position, plant);
+    (visited, plant)
+}
 
-    garden.remove(&position);
+fn explore_connected_positions(
+    garden: &mut HashMap<(i64, i64), char>,
+    start: (i64, i64),
+    target: char,
+) -> HashSet<(i64, i64)> {
+    let mut stack = vec![start];
+    let mut visited = HashSet::new();
+    
+    garden.remove(&start);
+    
     while let Some(location) = stack.pop() {
         if visited.insert(location) {
-            for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
-                let new_location = (location.0 + direction.0, location.1 + direction.1);
-                if let Some(&new_position_char) = garden.get(&new_location) {
-                    if new_position_char == plant {
-                        garden.remove(&new_location);
-                        stack.push(new_location);
-                    }
-                }
+            let neighbors = get_matching_neighbors(garden, location, target);
+            for neighbor in neighbors {
+                garden.remove(&neighbor);
+                stack.push(neighbor);
             }
         }
     }
+    
+    visited
+}
 
-    (visited, plant)
+fn get_matching_neighbors(
+    garden: &HashMap<(i64, i64), char>,
+    location: (i64, i64),
+    target: char,
+) -> Vec<(i64, i64)> {
+    DIRECTIONS.iter()
+        .map(|&(dx, dy)| (location.0 + dx, location.1 + dy))
+        .filter(|&pos| garden.get(&pos).map_or(false, |&c| c == target))
+        .collect()
 }
 
 fn calculate_perimeter(visited: &HashSet<(i64, i64)>) -> usize {
