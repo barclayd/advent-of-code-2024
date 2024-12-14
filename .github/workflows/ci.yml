@@ -66,17 +66,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup cache
+      - name: Cache cargo registry
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ${{ matrix.folder }}/target/debug/deps
-          key: ${{ runner.os }}-cargo-${{ matrix.folder }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.folder }}-
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache project target
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.folder }}/target/debug/deps
+          key: ${{ runner.os }}-project-deps-${{ matrix.folder }}-${{ hashFiles(format('{}/Cargo.lock', matrix.folder)) }}
 
       - name: Build
         run: |

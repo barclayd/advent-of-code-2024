@@ -1,7 +1,7 @@
+use crate::Part::{Part1, Part2};
 use std::collections::HashSet;
 use std::fs;
 use std::str::FromStr;
-use crate::Part::{Part1, Part2};
 
 #[derive(PartialEq, Debug)]
 enum Part {
@@ -73,20 +73,26 @@ impl Grid {
         Self { width, height }
     }
 
-    fn mid_x(&self) -> i32 { self.width / 2 }
-    fn mid_y(&self) -> i32 { self.height / 2 }
+    fn mid_x(&self) -> i32 {
+        self.width / 2
+    }
+    fn mid_y(&self) -> i32 {
+        self.height / 2
+    }
 }
 
 impl FromStr for Coordinates {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let [x, y] = s.split(',')
+        let [x, y] = s
+            .split(',')
             .map(str::parse)
             .collect::<Result<Vec<i32>, _>>()
-            .map_err(|_| "Failed to parse coordinates")?[..] else {
-                return Err("Invalid coordinate format".to_string());
-            };
+            .map_err(|_| "Failed to parse coordinates")?[..]
+        else {
+            return Err("Invalid coordinate format".to_string());
+        };
 
         Ok(Self::new(x, y))
     }
@@ -129,7 +135,7 @@ fn parse_input(file_path: &str) -> Vec<Robot> {
 
 fn get_safety_factor(mut robots: Vec<Robot>) -> i32 {
     let grid = Grid::new(WIDTH, HEIGHT);
-    
+
     for _ in 1..=100 {
         advance_robots(&mut robots, &grid);
     }
@@ -138,7 +144,8 @@ fn get_safety_factor(mut robots: Vec<Robot>) -> i32 {
 }
 
 fn advance_robots(robots: &mut [Robot], grid: &Grid) {
-    robots.iter_mut()
+    robots
+        .iter_mut()
         .for_each(|robot| robot.advance(grid.width, grid.height));
 }
 
@@ -156,25 +163,29 @@ fn calculate_safety_factor(robots: &[Robot], grid: &Grid) -> i32 {
 
 fn get_fewest_seconds_to_form_picture(mut robots: Vec<Robot>) -> i32 {
     let grid = Grid::new(WIDTH, HEIGHT);
-    
+
     for seconds in 1.. {
         advance_robots(&mut robots, &grid);
 
-        let unique_positions: HashSet<_> = robots.iter()
-            .map(|robot| robot.position)
-            .collect();
+        let unique_positions: HashSet<_> = robots.iter().map(|robot| robot.position).collect();
 
         if unique_positions.len() == robots.len() {
             return seconds;
         }
     }
-    
+
     unreachable!("Solution should be found")
 }
 
 fn main() {
-    println!("Part 1 value: {}", get_challenge_value("./input.txt", Part1));
-    println!("Part 2 value: {}", get_challenge_value("./input.txt", Part2));
+    println!(
+        "Part 1 value: {}",
+        get_challenge_value("./input.txt", Part1)
+    );
+    println!(
+        "Part 2 value: {}",
+        get_challenge_value("./input.txt", Part2)
+    );
 }
 
 #[cfg(test)]
