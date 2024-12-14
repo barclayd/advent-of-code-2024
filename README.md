@@ -62,20 +62,20 @@ advent-of-code-2024/
 └── README.md
 ```
 
-## Progress (24/50 ⭐️)
+## Progress (26/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
-|-----|---------------------------------------------------------------------|-------|
-| 1   | [Historian Hysteria](https://adventofcode.com/2024/day/1)         | ⭐️⭐️  |
-| 2   | [Red-Nosed Reports](https://adventofcode.com/2024/day/2)          | ⭐️⭐️  |
-| 3   | [Mull It Over](https://adventofcode.com/2024/day/3)               | ⭐️⭐️  |
-| 4   | [Ceres Search](https://adventofcode.com/2024/day/4)               | ⭐️⭐️  |
-| 5   | [Print Queue](https://adventofcode.com/2024/day/5)                | ⭐️⭐️  |
-| 6   | [Guard Gallivant](https://adventofcode.com/2024/day/6)            | ⭐️⭐️  |
-| 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️  |
-| 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐    |
-| 9   | [Disk Fragmenter](https://adventofcode.com/2024/day/9) | ⭐️⭐️  |
-| 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐   |
-| 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐   |
-| 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐   |
-| 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ⭐️★   |
+|-----|---------------------------------------------------------------------|------|
+| 1   | [Historian Hysteria](https://adventofcode.com/2024/day/1)         | ⭐️⭐️ |
+| 2   | [Red-Nosed Reports](https://adventofcode.com/2024/day/2)          | ⭐️⭐️ |
+| 3   | [Mull It Over](https://adventofcode.com/2024/day/3)               | ⭐️⭐️ |
+| 4   | [Ceres Search](https://adventofcode.com/2024/day/4)               | ⭐️⭐️ |
+| 5   | [Print Queue](https://adventofcode.com/2024/day/5)                | ⭐️⭐️ |
+| 6   | [Guard Gallivant](https://adventofcode.com/2024/day/6)            | ⭐️⭐️ |
+| 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️ |
+| 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐   |
+| 9   | [Disk Fragmenter](https://adventofcode.com/2024/day/9) | ⭐️⭐️ |
+| 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐  |
+| 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐  |
+| 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐  |
+| 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ⭐⭐   |
