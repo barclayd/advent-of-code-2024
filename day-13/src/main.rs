@@ -8,13 +8,13 @@ enum Part {
     Part2,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 struct Position {
     x: i64,
     y: i64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Claw {
     button_a: Position,
     button_b: Position,
@@ -63,8 +63,15 @@ impl FromStr for Claw {
 }
 
 impl Claw {
-    fn calculate_tokens(&self) -> i64 {
-        0
+    fn calculate_tokens(&self) -> Option<i64> {
+       let n = (self.button_a.x * self.prize.y - self.button_a.y * self.prize.x) / (self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x);
+       let m = (self.prize.x - self.button_b.x * n) / self.button_a.x;
+
+        if (self.button_a.x * m + self.button_b.x * n, self.button_a.y * m + self.button_b.y * n) == (self.prize.x, self.prize.y) {
+            return Some(3*m + n)
+        } else {
+            None
+        }
     }
 }
 
@@ -97,15 +104,15 @@ fn get_minimum_amount_of_tokens_spent_to_win_all_prizes(file_path: &str, part: P
 
     let claws = parse_input(&file_contents)
         .expect("Failed to parse input");
-    
-    if part == Part::Part1 {
-        claws.iter().map(Claw::calculate_tokens).sum()
+
+    if part == Part1 {
+        claws.iter().filter_map(Claw::calculate_tokens).sum()
     } else { 4 }
 }
 
 fn main() {
-    println!("Part 1 value: {}", get_minimum_amount_of_tokens_spent_to_win_all_prizes("./test.txt", Part1));
-    // println!("Part 2 value: {}", get_minimum_amount_of_tokens_spent_to_win_all_prizes("./input.txt", Part2));
+    println!("Part 1 value: {}", get_minimum_amount_of_tokens_spent_to_win_all_prizes("./input.txt", Part1));
+    println!("Part 2 value: {}", get_minimum_amount_of_tokens_spent_to_win_all_prizes("./test.txt", Part2));
 }
 
 #[cfg(test)]
@@ -122,7 +129,7 @@ mod tests {
     #[test]
     fn returns_expected_value_for_input_data_for_part_1() {
         let minimum_amount_of_tokens_spent_to_win_prizes = get_minimum_amount_of_tokens_spent_to_win_all_prizes("./input.txt", Part1);
-        assert_eq!(minimum_amount_of_tokens_spent_to_win_prizes, 8);
+        assert_eq!(minimum_amount_of_tokens_spent_to_win_prizes, 40369);
     }
 
     #[test]
