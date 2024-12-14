@@ -62,7 +62,7 @@ advent-of-code-2024/
 └── README.md
 ```
 
-## Progress (23/50 ⭐️)
+## Progress (24/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
 |-----|---------------------------------------------------------------------|-----|
@@ -78,3 +78,4 @@ advent-of-code-2024/
 | 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐ |
 | 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐ |
 | 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐ |
+| 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ★★ |
