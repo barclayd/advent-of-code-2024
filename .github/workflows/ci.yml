@@ -11,26 +11,57 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
-  find_projects:
+  find_changed_folders:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+
       - id: set-matrix
         run: |
-          PROJECTS=$(find . -name Cargo.toml -exec dirname {} \; | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=${PROJECTS}" >> $GITHUB_OUTPUT
-          echo "Found projects: ${PROJECTS}"
+          # For pull requests, compare against the base branch
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "Pull request detected"
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          else
+            echo "Push detected"
+            # For pushes, compare against the previous commit
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          fi
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Find Cargo.toml directories that have changes
+          CHANGED_FOLDERS=$(echo "$CHANGED_FILES" | xargs -I {} dirname {} | sort -u | \
+            while read dir; do
+              if [ -f "$dir/Cargo.toml" ]; then
+                echo "$dir"
+              elif [ -f "$(echo "$dir" | cut -d/ -f1)/Cargo.toml" ]; then
+                echo "$(echo "$dir" | cut -d/ -f1)"
+              fi
+            done | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          
+          if [ "$CHANGED_FOLDERS" == "[]" ] || [ -z "$CHANGED_FOLDERS" ]; then
+            CHANGED_FOLDERS="[]"
+            echo "No Rust folders changed"
+          else
+            echo "Changed folders: $CHANGED_FOLDERS"
+          fi
+          
+          echo "matrix=${CHANGED_FOLDERS}" >> $GITHUB_OUTPUT
 
   build_and_test:
-    needs: find_projects
+    needs: find_changed_folders
+    if: ${{ needs.find_changed_folders.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJson(needs.find_projects.outputs.matrix) }}
+        folder: ${{ fromJson(needs.find_changed_folders.outputs.matrix) }}
     
     steps:
       - uses: actions/checkout@v4
@@ -39,22 +70,20 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ${{ matrix.project }}/target/
-          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.folder }}/target/debug/deps
+          key: ${{ runner.os }}-cargo-${{ matrix.folder }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.project }}-
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-${{ matrix.folder }}-
 
       - name: Build
         run: |
-          cd ${{ matrix.project }}
+          cd ${{ matrix.folder }}
           cargo build --verbose
 
       - name: Run tests
         run: |
-          cd ${{ matrix.project }}
+          cd ${{ matrix.folder }}
           cargo test --verbose
