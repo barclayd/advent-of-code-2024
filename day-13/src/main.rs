@@ -2,6 +2,8 @@ use crate::Part::{Part1, Part2};
 use std::fs;
 use std::str::FromStr;
 
+const PART_2_SCALE: i64 = 10_000_000_000_000;
+
 #[derive(PartialEq, Debug)]
 enum Part {
     Part1,
@@ -21,23 +23,63 @@ struct Claw {
     prize: Position,
 }
 
+impl Position {
+    fn new(x: i64, y: i64) -> Self {
+        Self { x, y }
+    }
+
+    fn offset(&self, value: i64) -> Self {
+        Self {
+            x: self.x + value,
+            y: self.y + value,
+        }
+    }
+
+    fn as_tuple(&self) -> (i64, i64) {
+        (self.x, self.y)
+    }
+}
+
+impl Claw {
+    fn with_inflated_prize(&self, offset: i64) -> Self {
+        Self {
+            prize: self.prize.offset(offset),
+            ..*self
+        }
+    }
+
+    fn calculate_tokens(&self) -> Option<i64> {
+        let det = self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x;
+
+        if det == 0 {
+            return None;
+        }
+
+        let n = (self.button_a.x * self.prize.y - self.button_a.y * self.prize.x) / det;
+        let m = (self.prize.x - self.button_b.x * n) / self.button_a.x;
+
+        let calculated_position = Position::new(
+            self.button_a.x * m + self.button_b.x * n,
+            self.button_a.y * m + self.button_b.y * n,
+        );
+
+        (calculated_position.as_tuple() == self.prize.as_tuple()).then_some(3 * m + n)
+    }
+}
+
 impl FromStr for Position {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split(", ").collect();
-        if parts.len() != 2 {
-            return Err("Invalid position format".to_string());
-        }
-
         let [px, py] = parts[..2] else {
             return Err("Invalid coordinate format".to_string());
         };
 
-        Ok(Position {
-            x: parse_coordinate(px, "X")?,
-            y: parse_coordinate(py, "Y")?,
-        })
+        Ok(Self::new(
+            parse_coordinate(px, "X")?,
+            parse_coordinate(py, "Y")?,
+        ))
     }
 }
 
@@ -45,38 +87,15 @@ impl FromStr for Claw {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let lines: Vec<&str> = s.lines().collect();
-        if lines.len() != 3 {
-            return Err("Invalid claw section format".to_string());
-        }
-
-        let [a, b, p] = lines[..3] else {
+        let [a, b, p] = s.lines().collect::<Vec<_>>()[..3] else {
             return Err("Invalid number of lines".to_string());
         };
 
-        Ok(Claw {
+        Ok(Self {
             button_a: parse_value(a)?,
             button_b: parse_value(b)?,
             prize: parse_value(p)?,
         })
-    }
-}
-
-impl Claw {
-    fn calculate_tokens(&self) -> Option<i64> {
-        let n = (self.button_a.x * self.prize.y - self.button_a.y * self.prize.x)
-            / (self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x);
-        let m = (self.prize.x - self.button_b.x * n) / self.button_a.x;
-
-        if (
-            self.button_a.x * m + self.button_b.x * n,
-            self.button_a.y * m + self.button_b.y * n,
-        ) == (self.prize.x, self.prize.y)
-        {
-            Some(3 * m + n)
-        } else {
-            None
-        }
     }
 }
 
@@ -91,8 +110,7 @@ fn parse_coordinate(input: &str, prefix: &str) -> Result<i64, String> {
 fn parse_value(line: &str) -> Result<Position, String> {
     line.split(": ")
         .nth(1)
-        .ok_or_else(|| "Invalid prize format".to_string())?
-        
+        .ok_or_else(|| "Invalid format".to_string())?
         .parse()
 }
 
@@ -104,28 +122,23 @@ fn parse_input(input: &str) -> Result<Vec<Claw>, String> {
         .collect()
 }
 
+fn calculate_total_tokens(claws: &[Claw], part: Part) -> i64 {
+    let scale = if part == Part2 { PART_2_SCALE } else { 0 };
+
+    claws
+        .iter()
+        .map(|claw| claw.with_inflated_prize(scale))
+        .filter_map(|claw| claw.calculate_tokens())
+        .sum()
+}
+
 fn get_minimum_amount_of_tokens_spent_to_win_all_prizes(file_path: &str, part: Part) -> i64 {
     let file_contents =
         fs::read_to_string(file_path).expect("Should have been able to read the file");
 
     let claws = parse_input(&file_contents).expect("Failed to parse input");
 
-    if part == Part1 {
-        claws.iter().filter_map(Claw::calculate_tokens).sum()
-    } else {
-        claws.iter()
-        .filter_map(|claw| {
-            let new_claw = Claw {
-                prize: Position {
-                    x: claw.prize.x + 10_000_000_000_000,
-                    y: claw.prize.y + 10_000_000_000_000
-                },
-                ..*claw
-            };
-            Claw::calculate_tokens(&new_claw)
-        })
-        .sum()
-    }
+    calculate_total_tokens(&claws, part)
 }
 
 fn main() {
