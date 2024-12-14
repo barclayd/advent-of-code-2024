@@ -75,8 +75,14 @@ jobs:
       - name: Cache project target
         uses: actions/cache@v3
         with:
-          path: ${{ matrix.folder }}/target/debug/deps
-          key: ${{ runner.os }}-project-deps-${{ matrix.folder }}-${{ hashFiles(format('${{ matrix.folder }}/Cargo.lock')) }}
+          path: |
+            ${{ matrix.folder }}/target/debug/deps
+            ${{ matrix.folder }}/target/debug/.fingerprint
+          key: ${{ runner.os }}-deps-${{ matrix.folder }}-${{ hashFiles('${{ matrix.folder }}/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-${{ matrix.folder }}-
+          save-always: false  # Only save cache on successful builds
+          lookup-only: true   # Skip upload if cache exists
 
       - name: Build
         run: |
