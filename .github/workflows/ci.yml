@@ -18,19 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for comparing changes
+          fetch-depth: 0
 
       - id: set-matrix
         run: |
-          # Get the base ref for pull requests, or the previous commit for pushes
+          # For pull requests, compare against the base branch
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            BASE_SHA=${{ github.event.pull_request.base.sha }}
+            echo "Pull request detected"
+            CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
           else
-            BASE_SHA=${{ github.event.before }}
+            echo "Push detected"
+            # For pushes, compare against the previous commit
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
           fi
-
-          # Find all changed files
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA ${{ github.sha }})
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
           
           # Find Cargo.toml directories that have changes
           CHANGED_PROJECTS=$(echo "$CHANGED_FILES" | xargs -I {} dirname {} | sort -u | \
@@ -42,7 +45,6 @@ jobs:
               fi
             done | sort -u | jq -R -s -c 'split("\n")[:-1]')
           
-          # If no projects changed, create empty array to avoid workflow failure
           if [ "$CHANGED_PROJECTS" == "[]" ] || [ -z "$CHANGED_PROJECTS" ]; then
             CHANGED_PROJECTS="[]"
             echo "No Rust projects changed"
