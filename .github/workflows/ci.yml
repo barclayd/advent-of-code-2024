@@ -66,18 +66,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ${{ matrix.folder }}/target/debug/deps
-          key: ${{ runner.os }}-cargo-${{ matrix.folder }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.folder }}-
-
       - name: Build
         run: |
           cd ${{ matrix.folder }}
