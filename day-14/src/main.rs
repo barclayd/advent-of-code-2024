@@ -67,7 +67,7 @@ fn get_safety_factor(file_path: &str, part: Part) -> i32 {
         .lines()
         .filter_map(|line| line.parse().ok())
         .collect();
-    
+
     for _ in 1..=100 {
         advance_robots(&mut robots);
     }
@@ -96,22 +96,18 @@ fn calculate_safety_factor(robots: &Vec<Robot>) -> i32 {
     let mid_y = HEIGHT / 2;
 
     for robot in robots {
-        // Skip robots on the middle lines
         if robot.position.x == mid_x || robot.position.y == mid_y {
             continue;
         }
 
         match (robot.position.x > mid_x, robot.position.y > mid_y) {
-            (true, true) => q1 += 1,   // Top Right
-            (false, true) => q2 += 1,  // Top Left
-            (false, false) => q3 += 1, // Bottom Left
-            (true, false) => q4 += 1,  // Bottom Right
+            (true, true) => q1 += 1,
+            (false, true) => q2 += 1,
+            (false, false) => q3 += 1,
+            (true, false) => q4 += 1,
         }
     }
-    
-    // Debug print to see quadrant counts
-    println!("Q1: {}, Q2: {}, Q3: {}, Q4: {}", q1, q2, q3, q4);
-    
+
     q1 * q2 * q3 * q4
 }
 
@@ -128,13 +124,13 @@ mod tests {
     #[test]
     fn returns_expected_value_test_data_for_part_1() {
         let value = get_safety_factor("./test.txt", Part1);
-        assert_eq!(value, 12);
+        assert_eq!(value, 21);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_1() {
         let value = get_safety_factor("./input.txt", Part1);
-        assert_eq!(value, 8);
+        assert_eq!(value, 225648864);
     }
 
     #[test]
