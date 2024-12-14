@@ -20,7 +20,9 @@ cargo build
 cargo test
 ```
 
-## Start a new day
+## Scripts
+
+### Start a new day
 
 Prerequisites: 
 
@@ -61,6 +63,16 @@ advent-of-code-2024/
 ...
 └── README.md
 ```
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration. The workflow:
+
+- Runs on every push to `main`and pull request against `main`
+- Tests solution for every day
+
+The workflow configuration can be found in `.github/workflows/ci.yml`.
+These run in a parallised matrix.
 
 ## Progress (26/50 ⭐️)
 
