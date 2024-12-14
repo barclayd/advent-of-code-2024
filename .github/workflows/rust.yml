@@ -1,34 +1,60 @@
-name: Rust Tests
+name: Rust CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
 
 jobs:
-  test:
+  find_projects:
     runs-on: ubuntu-latest
-
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      
+      - id: set-matrix
+        run: |
+          PROJECTS=$(find . -name Cargo.toml -exec dirname {} \; | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=${PROJECTS}" >> $GITHUB_OUTPUT
+          echo "Found projects: ${PROJECTS}"
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+  build_and_test:
+    needs: find_projects
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.find_projects.outputs.matrix) }}
+    
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
+      - name: Setup cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ${{ matrix.project }}/target/
+          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.project }}-
+            ${{ runner.os }}-cargo-
 
-    - name: Find and test all Rust projects
-      run: |
-        for d in */; do
-          if [ -f "${d}Cargo.toml" ]; then
-            echo "Testing ${d}"
-            cd "${d}"
-            cargo test --verbose
-            cd ..
-          fi
-        done 
+      - name: Build
+        run: |
+          cd ${{ matrix.project }}
+          cargo build --verbose
+
+      - name: Run tests
+        run: |
+          cd ${{ matrix.project }}
+          cargo test --verbose
