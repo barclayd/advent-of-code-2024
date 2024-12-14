@@ -11,26 +11,55 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
-  find_projects:
+  find_changed_projects:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0  # Fetch all history for comparing changes
+
       - id: set-matrix
         run: |
-          PROJECTS=$(find . -name Cargo.toml -exec dirname {} \; | jq -R -s -c 'split("\n")[:-1]')
-          echo "matrix=${PROJECTS}" >> $GITHUB_OUTPUT
-          echo "Found projects: ${PROJECTS}"
+          # Get the base ref for pull requests, or the previous commit for pushes
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+          else
+            BASE_SHA=${{ github.event.before }}
+          fi
+
+          # Find all changed files
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA ${{ github.sha }})
+          
+          # Find Cargo.toml directories that have changes
+          CHANGED_PROJECTS=$(echo "$CHANGED_FILES" | xargs -I {} dirname {} | sort -u | \
+            while read dir; do
+              if [ -f "$dir/Cargo.toml" ]; then
+                echo "$dir"
+              elif [ -f "$(echo "$dir" | cut -d/ -f1)/Cargo.toml" ]; then
+                echo "$(echo "$dir" | cut -d/ -f1)"
+              fi
+            done | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          
+          # If no projects changed, create empty array to avoid workflow failure
+          if [ "$CHANGED_PROJECTS" == "[]" ] || [ -z "$CHANGED_PROJECTS" ]; then
+            CHANGED_PROJECTS="[]"
+            echo "No Rust projects changed"
+          else
+            echo "Changed projects: $CHANGED_PROJECTS"
+          fi
+          
+          echo "matrix=${CHANGED_PROJECTS}" >> $GITHUB_OUTPUT
 
   build_and_test:
-    needs: find_projects
+    needs: find_changed_projects
+    if: ${{ needs.find_changed_projects.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJson(needs.find_projects.outputs.matrix) }}
+        project: ${{ fromJson(needs.find_changed_projects.outputs.matrix) }}
     
     steps:
       - uses: actions/checkout@v4
@@ -39,15 +68,13 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ${{ matrix.project }}/target/
+            ${{ matrix.project }}/target/debug/deps
           key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-${{ matrix.project }}-
-            ${{ runner.os }}-cargo-
 
       - name: Build
         run: |
