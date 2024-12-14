@@ -66,19 +66,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache cargo registry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Cache project target
-        uses: actions/cache@v3
-        with:
-          path: ${{ matrix.folder }}/target/debug/.fingerprint
-          key: ${{ runner.os }}-fingerprint-${{ matrix.folder }}-${{ hashFiles('${{ matrix.folder }}/Cargo.lock') }}
-          lookup-only: true
-
       - name: Build
         run: |
           cd ${{ matrix.folder }}
