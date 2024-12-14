@@ -59,24 +59,28 @@ impl FromStr for Robot {
 const WIDTH: i32 = 101;
 const HEIGHT: i32 = 103;
 
-fn get_safety_factor(file_path: &str, part: Part) -> i32 {
+fn get_challenge_value(file_path: &str, part: Part) -> i32 {
     let file_contents =
         fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    let mut robots: Vec<Robot> = file_contents
+    let robots: Vec<Robot> = file_contents
         .lines()
         .filter_map(|line| line.parse().ok())
         .collect();
 
+    if part == Part1 {
+        get_safety_factor(robots)
+    } else {
+        get_fewest_seconds_to_form_picture_of_christmas_tree(robots)
+    }
+}
+
+fn get_safety_factor(mut robots: Vec<Robot>) -> i32 {
     for _ in 1..=100 {
         advance_robots(&mut robots);
     }
 
-    if part == Part1 {
-        calculate_safety_factor(&robots)
-    } else {
-        4
-    }
+    calculate_safety_factor(&robots)
 }
 
 fn advance_robots(robots: &mut Vec<Robot>) {
@@ -111,37 +115,50 @@ fn calculate_safety_factor(robots: &Vec<Robot>) -> i32 {
     q1 * q2 * q3 * q4
 }
 
+fn get_fewest_seconds_to_form_picture_of_christmas_tree(mut robots: Vec<Robot>) -> i32 {
+    let mut seconds_to_form_picture_of_christmas_tree = 0;
+    
+    for seconds in 1.. {
+        advance_robots(&mut robots);
+
+        let positions: Vec<_> = robots.iter()
+            .map(|robot| (robot.position.x, robot.position.y))
+            .collect();
+
+        if positions.len() == positions.iter().collect::<std::collections::HashSet<_>>().len() {
+            seconds_to_form_picture_of_christmas_tree = seconds;
+            break;
+        }
+    }
+    
+    seconds_to_form_picture_of_christmas_tree
+}
+
 fn main() {
-    println!("Part 1 value: {}", get_safety_factor("./input.txt", Part1));
-    println!("Part 2 value: {}", get_safety_factor("./input.txt", Part2));
+    println!("Part 1 value: {}", get_challenge_value("./input.txt", Part1));
+    println!("Part 2 value: {}", get_challenge_value("./input.txt", Part2));
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::get_safety_factor;
+    use crate::get_challenge_value;
     use crate::Part::{Part1, Part2};
 
     #[test]
     fn returns_expected_value_test_data_for_part_1() {
-        let value = get_safety_factor("./test.txt", Part1);
+        let value = get_challenge_value("./test.txt", Part1);
         assert_eq!(value, 21);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_1() {
-        let value = get_safety_factor("./input.txt", Part1);
+        let value = get_challenge_value("./input.txt", Part1);
         assert_eq!(value, 225648864);
     }
 
     #[test]
-    fn returns_expected_value_test_data_for_part_2() {
-        let value = get_safety_factor("./test.txt", Part2);
-        assert_eq!(value, 4);
-    }
-
-    #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
-        let value = get_safety_factor("./input.txt", Part2);
-        assert_eq!(value, 4);
+        let value = get_challenge_value("./input.txt", Part2);
+        assert_eq!(value, 7847);
     }
 }

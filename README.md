@@ -74,7 +74,7 @@ This project uses GitHub Actions for continuous integration. The workflow:
 The workflow configuration can be found in `.github/workflows/ci.yml`.
 These run in a parallised matrix.
 
-## Progress (26/50 ⭐️)
+## Progress (28/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
 |-----|---------------------------------------------------------------------|------|
@@ -91,4 +91,4 @@ These run in a parallised matrix.
 | 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐  |
 | 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐  |
 | 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ⭐⭐   |
-| 14   | [Restroom Redoubt](https://adventofcode.com/2024/day/14) | ★★ |
+| 14   | [Restroom Redoubt](https://adventofcode.com/2024/day/14) | ⭐⭐ |
