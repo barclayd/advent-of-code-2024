@@ -1,0 +1,60 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  find_projects:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - id: set-matrix
+        run: |
+          PROJECTS=$(find . -name Cargo.toml -exec dirname {} \; | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=${PROJECTS}" >> $GITHUB_OUTPUT
+          echo "Found projects: ${PROJECTS}"
+
+  build_and_test:
+    needs: find_projects
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJson(needs.find_projects.outputs.matrix) }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ${{ matrix.project }}/target/
+          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.project }}-
+            ${{ runner.os }}-cargo-
+
+      - name: Build
+        run: |
+          cd ${{ matrix.project }}
+          cargo build --verbose
+
+      - name: Run tests
+        run: |
+          cd ${{ matrix.project }}
+          cargo test --verbose

@@ -20,7 +20,9 @@ cargo build
 cargo test
 ```
 
-## Start a new day
+## Scripts
+
+### Start a new day
 
 Prerequisites: 
 
@@ -62,10 +64,20 @@ advent-of-code-2024/
 └── README.md
 ```
 
-## Progress (23/50 ⭐️)
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration. The workflow:
+
+- Runs on every push to `main`and pull request against `main`
+- Tests solution for every day
+
+The workflow configuration can be found in `.github/workflows/ci.yml`.
+These run in a parallised matrix.
+
+## Progress (26/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
-|-----|---------------------------------------------------------------------|-----|
+|-----|---------------------------------------------------------------------|------|
 | 1   | [Historian Hysteria](https://adventofcode.com/2024/day/1)         | ⭐️⭐️ |
 | 2   | [Red-Nosed Reports](https://adventofcode.com/2024/day/2)          | ⭐️⭐️ |
 | 3   | [Mull It Over](https://adventofcode.com/2024/day/3)               | ⭐️⭐️ |
@@ -73,8 +85,9 @@ advent-of-code-2024/
 | 5   | [Print Queue](https://adventofcode.com/2024/day/5)                | ⭐️⭐️ |
 | 6   | [Guard Gallivant](https://adventofcode.com/2024/day/6)            | ⭐️⭐️ |
 | 7   | [Bridge Repair](https://adventofcode.com/2024/day/7)              | ⭐️⭐️ |
-| 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐  |
+| 8   | [Resonant Collinearity](https://adventofcode.com/2024/day/8)      | ⭐⭐   |
 | 9   | [Disk Fragmenter](https://adventofcode.com/2024/day/9) | ⭐️⭐️ |
-| 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐ |
-| 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐ |
-| 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐ |
+| 10   | [Hoof It](https://adventofcode.com/2024/day/10) | ⭐️⭐  |
+| 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐  |
+| 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐  |
+| 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ⭐⭐   |
