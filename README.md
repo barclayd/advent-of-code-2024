@@ -91,3 +91,4 @@ These run in a parallised matrix.
 | 11   | [Plutonian Pebbles](https://adventofcode.com/2024/day/11) | ⭐️⭐  |
 | 12   | [Garden Groups](https://adventofcode.com/2024/day/12) | ⭐️⭐  |
 | 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ⭐⭐   |
+| 14   | [Restroom Redoubt](https://adventofcode.com/2024/day/14) | ★★ |
