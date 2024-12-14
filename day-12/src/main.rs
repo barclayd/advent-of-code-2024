@@ -205,11 +205,11 @@ fn remove_vertical_line(
 
 fn main() {
     println!(
-        "Part 1 value: {}",
+        "Part 1: total price of fencing: {}",
         get_total_price_of_fencing("./input.txt", Part1)
     );
     println!(
-        "Part 2 value: {}",
+        "Part 2: total price of fencing: {}",
         get_total_price_of_fencing("./input.txt", Part2)
     );
 }
@@ -220,26 +220,26 @@ mod tests {
     use crate::Part::{Part1, Part2};
 
     #[test]
-    fn returns_expected_value_test_data_for_part_1() {
-        let value = get_total_price_of_fencing("./test.txt", Part1);
-        assert_eq!(value, 1930);
+    fn returns_expected_total_price_of_fencing_for_test_data_for_part_1() {
+        let total_price_of_fencing = get_total_price_of_fencing("./test.txt", Part1);
+        assert_eq!(total_price_of_fencing, 1930);
     }
 
     #[test]
-    fn returns_expected_value_for_input_data_for_part_1() {
-        let value = get_total_price_of_fencing("./input.txt", Part1);
-        assert_eq!(value, 1431316);
+    fn returns_expected_total_price_of_fencing_for_input_data_for_part_1() {
+        let total_price_of_fencing = get_total_price_of_fencing("./input.txt", Part1);
+        assert_eq!(total_price_of_fencing, 1431316);
     }
 
     #[test]
-    fn returns_expected_value_test_data_for_part_2() {
-        let value = get_total_price_of_fencing("./test.txt", Part2);
-        assert_eq!(value, 1206);
+    fn returns_expected_total_price_of_fencing_for_test_data_for_part_2() {
+        let total_price_of_fencing = get_total_price_of_fencing("./test.txt", Part2);
+        assert_eq!(total_price_of_fencing, 1206);
     }
 
     #[test]
-    fn returns_expected_value_for_input_data_for_part_2() {
-        let value = get_total_price_of_fencing("./input.txt", Part2);
-        assert_eq!(value, 821428);
+    fn returns_expected_total_price_of_fencing_for_input_data_for_part_2() {
+        let total_price_of_fencing = get_total_price_of_fencing("./input.txt", Part2);
+        assert_eq!(total_price_of_fencing, 821428);
     }
 }
