@@ -11,7 +11,7 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
-  find_changed_projects:
+  find_changed_folders:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -36,7 +36,7 @@ jobs:
           echo "$CHANGED_FILES"
           
           # Find Cargo.toml directories that have changes
-          CHANGED_PROJECTS=$(echo "$CHANGED_FILES" | xargs -I {} dirname {} | sort -u | \
+          CHANGED_FOLDERS=$(echo "$CHANGED_FILES" | xargs -I {} dirname {} | sort -u | \
             while read dir; do
               if [ -f "$dir/Cargo.toml" ]; then
                 echo "$dir"
@@ -45,23 +45,23 @@ jobs:
               fi
             done | sort -u | jq -R -s -c 'split("\n")[:-1]')
           
-          if [ "$CHANGED_PROJECTS" == "[]" ] || [ -z "$CHANGED_PROJECTS" ]; then
-            CHANGED_PROJECTS="[]"
-            echo "No Rust projects changed"
+          if [ "$CHANGED_FOLDERS" == "[]" ] || [ -z "$CHANGED_FOLDERS" ]; then
+            CHANGED_FOLDERS="[]"
+            echo "No Rust folders changed"
           else
-            echo "Changed projects: $CHANGED_PROJECTS"
+            echo "Changed folders: $CHANGED_FOLDERS"
           fi
           
-          echo "matrix=${CHANGED_PROJECTS}" >> $GITHUB_OUTPUT
+          echo "matrix=${CHANGED_FOLDERS}" >> $GITHUB_OUTPUT
 
   build_and_test:
-    needs: find_changed_projects
-    if: ${{ needs.find_changed_projects.outputs.matrix != '[]' }}
+    needs: find_changed_folders
+    if: ${{ needs.find_changed_folders.outputs.matrix != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJson(needs.find_changed_projects.outputs.matrix) }}
+        folder: ${{ fromJson(needs.find_changed_folders.outputs.matrix) }}
     
     steps:
       - uses: actions/checkout@v4
@@ -73,17 +73,17 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ${{ matrix.project }}/target/debug/deps
-          key: ${{ runner.os }}-cargo-${{ matrix.project }}-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.folder }}/target/debug/deps
+          key: ${{ runner.os }}-cargo-${{ matrix.folder }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.project }}-
+            ${{ runner.os }}-cargo-${{ matrix.folder }}-
 
       - name: Build
         run: |
-          cd ${{ matrix.project }}
+          cd ${{ matrix.folder }}
           cargo build --verbose
 
       - name: Run tests
         run: |
-          cd ${{ matrix.project }}
+          cd ${{ matrix.folder }}
           cargo test --verbose
