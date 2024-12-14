@@ -76,7 +76,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ matrix.folder }}/target/debug/deps
-          key: ${{ runner.os }}-project-deps-${{ matrix.folder }}-${{ hashFiles(format('{}/Cargo.lock', matrix.folder)) }}
+          key: ${{ runner.os }}-project-deps-${{ matrix.folder }}-${{ hashFiles(format('${{ matrix.folder }}/Cargo.lock')) }}
 
       - name: Build
         run: |
