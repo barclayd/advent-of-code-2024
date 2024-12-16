@@ -1,5 +1,7 @@
+use std::collections::{HashSet, VecDeque};
 use crate::Part::{Part1, Part2};
 use std::fs;
+use itertools::Itertools;
 
 #[derive(PartialEq, Debug)]
 enum Part {
@@ -39,44 +41,50 @@ impl Direction {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum GridItem {
+enum Tile {
     Robot,
     Box,
+    BoxLeft,
+    BoxRight,
     Empty,
     Wall,
 }
 
-impl From<char> for GridItem {
+impl From<char> for Tile {
     fn from(c: char) -> Self {
         match c {
-            '@' => GridItem::Robot,
-            'O' => GridItem::Box,
-            '.' => GridItem::Empty,
-            _ => GridItem::Wall,
+            '@' => Tile::Robot,
+            'O' => Tile::Box,
+            '[' => Tile::BoxLeft,
+            ']' => Tile::BoxRight,
+            '.' => Tile::Empty,
+            _ => Tile::Wall,
         }
     }
 }
 
-impl Into<char> for GridItem {
+impl Into<char> for Tile {
     fn into(self) -> char {
         match self {
-            GridItem::Robot => '@',
-            GridItem::Box => 'O',
-            GridItem::Empty => '.',
-            GridItem::Wall => '#',
+            Tile::Robot => '@',
+            Tile::Box => 'O',
+            Tile::BoxLeft => '[',
+            Tile::BoxRight => ']',
+            Tile::Empty => '.',
+            Tile::Wall => '#',
         }
     }
 }
 
 struct Warehouse {
-    grid: Vec<Vec<GridItem>>,
+    grid: Vec<Vec<Tile>>,
 }
 
 impl Warehouse {
     fn new(input: &str) -> Self {
         let grid = input
             .lines()
-            .map(|line| line.chars().map(GridItem::from).collect())
+            .map(|line| line.chars().map(Tile::from).collect())
             .collect();
         Self { grid }
     }
@@ -84,7 +92,7 @@ impl Warehouse {
     fn find_robot(&self) -> Option<(i32, i32)> {
         for (y, row) in self.grid.iter().enumerate() {
             for (x, &tile) in row.iter().enumerate() {
-                if tile == GridItem::Robot {
+                if tile == Tile::Robot {
                     return Some((y as i32, x as i32));
                 }
             }
@@ -92,15 +100,15 @@ impl Warehouse {
         None
     }
 
-    fn get_tile(&self, y: i32, x: i32) -> GridItem {
+    fn get_tile(&self, y: i32, x: i32) -> Tile {
         self.grid
             .get(y as usize)
             .and_then(|row| row.get(x as usize))
             .copied()
-            .unwrap_or(GridItem::Wall)
+            .unwrap_or(Tile::Wall)
     }
 
-    fn set_tile(&mut self, y: i32, x: i32, tile: GridItem) {
+    fn set_tile(&mut self, y: i32, x: i32, tile: Tile) {
         if let (Some(row), Some(col)) = (self.grid.get_mut(y as usize), Some(x as usize)) {
             if let Some(cell) = row.get_mut(col) {
                 *cell = tile;
@@ -121,16 +129,16 @@ impl Warehouse {
         let (mut y2, mut x2) = (y + dy, x + dx);
 
         match self.get_tile(y2, x2) {
-            GridItem::Empty => self.swap_tiles(y, x, y2, x2),
-            GridItem::Box => {
+            Tile::Empty => self.swap_tiles(y, x, y2, x2),
+            Tile::Box => {
                 let mut boxes_to_move = vec![];
-                while self.get_tile(y2, x2) == GridItem::Box {
+                while self.get_tile(y2, x2) == Tile::Box {
                     boxes_to_move.push((y2, x2));
                     y2 += dy;
                     x2 += dx;
                 }
 
-                if self.get_tile(y2, x2) == GridItem::Empty {
+                if self.get_tile(y2, x2) == Tile::Empty {
                     for &(by, bx) in boxes_to_move.iter().rev() {
                         self.swap_tiles(by, bx, by + dy, bx + dx);
                     }
@@ -141,13 +149,75 @@ impl Warehouse {
         }
     }
 
-    fn calculate_gps_score(&self) -> usize {
+    fn from_scaled(input: &str) -> Self {
+        let grid = input
+            .lines()
+            .map(|line| {
+                line.chars()
+                    .flat_map(|c| match c {
+                        '#' => vec![Tile::Wall, Tile::Wall],
+                        'O' => vec![Tile::BoxLeft, Tile::BoxRight],
+                        '.' => vec![Tile::Empty, Tile::Empty],
+                        '@' => vec![Tile::Robot, Tile::Empty],
+                        _ => vec![Tile::from(c)],
+                    })
+                    .collect()
+            })
+            .collect();
+        Self { grid }
+    }
+
+    fn attempt_scaled_move(&mut self, direction: Direction) {
+        if let Some((y, x)) = self.find_robot() {
+            let (dy, dx) = direction.to_delta();
+            let (y2, x2) = (y + dy, x + dx);
+
+            match self.get_tile(y2, x2) {
+                Tile::Empty => self.swap_tiles(y, x, y2, x2),
+                Tile::BoxLeft | Tile::BoxRight => {
+                    let mut queue = VecDeque::from([(y, x)]);
+                    let mut seen = HashSet::new();
+                    
+                    while let Some((cy, cx)) = queue.pop_front() {
+                        if seen.insert((cy, cx)) {
+                            let ny = cy + dy;
+                            let nx = cx + dx;
+                            match self.get_tile(ny, nx) {
+                                Tile::Wall => return,
+                                Tile::BoxLeft => {
+                                    queue.extend([(ny, nx), (ny, nx + 1)]);
+                                }
+                                Tile::BoxRight => {
+                                    queue.extend([(ny, nx), (ny, nx - 1)]);
+                                }
+                                _ => continue,
+                            }
+                        }
+                    }
+
+                    let seen_sorted = match (dy, dx) {
+                        (-1, 0) => seen.iter().sorted_by_key(|&&(y, _)| y),
+                        (0, 1) => seen.iter().sorted_by_key(|&&(_, x)| -x),
+                        (1, 0) => seen.iter().sorted_by_key(|&&(y, _)| -y),
+                        _ => seen.iter().sorted_by_key(|&&(_, x)| x),
+                    };
+
+                    for &(sy, sx) in seen_sorted {
+                        self.swap_tiles(sy + dy, sx + dx, sy, sx);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn calculate_gps_score(&self, scoring_tile: Tile) -> usize {
         self.grid
             .iter()
             .enumerate()
             .flat_map(|(y, row)| {
                 row.iter().enumerate().filter_map(move |(x, &tile)| {
-                    if tile == GridItem::Box {
+                    if tile == scoring_tile {
                         Some(100 * y + x)
                     } else {
                         None
@@ -159,28 +229,33 @@ impl Warehouse {
 }
 
 fn get_value(file_path: &str, part: Part) -> usize {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
-
+    let file_contents = fs::read_to_string(file_path)
+        .expect("Should have been able to read the file");
+    
     let (map_str, moves_str) = file_contents
         .split_once("\n\n")
         .expect("Invalid input format");
 
-    let mut warehouse = Warehouse::new(map_str);
+    let moves = moves_str
+        .chars()
+        .filter(|c| *c != '\n')
+        .map(Direction::from);
 
-    if part == Part1 {
-        let moves = moves_str
-            .chars()
-            .filter(|c| *c != '\n')
-            .map(Direction::from);
-
-        for direction in moves {
-            warehouse.attempt_move(direction);
+    match part {
+        Part1 => {
+            let mut warehouse = Warehouse::new(map_str);
+            for direction in moves {
+                warehouse.attempt_move(direction);
+            }
+            warehouse.calculate_gps_score(Tile::Box)
         }
-
-        warehouse.calculate_gps_score()
-    } else {
-        4
+        Part2 => {
+            let mut warehouse = Warehouse::from_scaled(map_str);
+            for direction in moves {
+                warehouse.attempt_scaled_move(direction);
+            }
+            warehouse.calculate_gps_score(Tile::BoxLeft)
+        }
     }
 }
 
@@ -209,12 +284,12 @@ mod tests {
     #[test]
     fn returns_expected_value_test_data_for_part_2() {
         let value = get_value("./test.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 9021);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
         let value = get_value("./input.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 1471049);
     }
 }
