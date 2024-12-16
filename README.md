@@ -72,7 +72,7 @@ This project uses GitHub Actions for continuous integration. The workflow:
 - Tests solution for every day
 
 The workflow configuration can be found in `.github/workflows/ci.yml`.
-These run in a parallised matrix.
+These run in a parallelized matrix.
 
 ## Progress (30/50 ⭐️)
 
@@ -93,3 +93,4 @@ These run in a parallised matrix.
 | 13   | [Claw Contraption](https://adventofcode.com/2024/day/13) | ⭐⭐  |
 | 14   | [Restroom Redoubt](https://adventofcode.com/2024/day/14) | ⭐⭐ |
 | 15   | [Warehouse Woes](https://adventofcode.com/2024/day/15) | ⭐⭐ |
+| 16   | [Reindeer Maze](https://adventofcode.com/2024/day/16) | ⭐★ |
