@@ -70,6 +70,28 @@ impl PartialOrd for State {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct State2 {
+    y: i32,
+    x: i32,
+    direction: i32,
+    cost: u32,
+}
+
+impl Ord for State2 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (other.cost.cmp(&self.cost))
+            .then_with(|| self.y.cmp(&other.y))
+            .then_with(|| self.x.cmp(&other.x))
+    }
+}
+
+impl PartialOrd for State2 {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 struct Maze {
     grid: Vec<Vec<char>>,
 }
@@ -94,7 +116,7 @@ impl Maze {
     fn find_shortest_path_score(&self) -> u32 {
         let (start, end) = self.get_start_and_end();
         
-        let mut best = u32::MAX;
+        let mut shortest_path_score = u32::MAX;
         let mut heap = BinaryHeap::from([State {
             y: start.0,
             x: start.1,
@@ -108,8 +130,8 @@ impl Maze {
             if !dist.contains_key(&(y, x, direction)) {
                 *dist.entry((y, x, direction)).or_default() = cost;
             }
-            if (y, x) == end && cost < best {
-                best = cost;
+            if (y, x) == end && cost < shortest_path_score {
+                shortest_path_score = cost;
             }
             if seen.insert((y, x, direction)) {
                 let (dy, dx) = direction.to_delta();
@@ -141,8 +163,98 @@ impl Maze {
                 }
             }
         }
+        shortest_path_score
+    }
+
+    fn get_number_of_tiles_on_shortest_paths(
+        &self,
+    ) -> usize {
+        let (start, end) = self.get_start_and_end();
+
+        let dirs = [(-1, 0), (0, 1), (1, 0), (0, -1)];
+        let mut dist = HashMap::new();
+        let init_heap1 = vec![State2 {
+            y: start.0,
+            x: start.1,
+            direction: 1,
+            cost: 0,
+        }];
+        let best = self.find_shortest_path_part_2(end, dirs, init_heap1, &mut dist);
+
+        let dirs2 = [(1, 0), (0, -1), (-1, 0), (0, 1)];
+        let mut dist2 = HashMap::new();
+        let init_heap2 = (0..dirs2.len())
+            .map(|dir| State2 {
+                y: end.0,
+                x: end.1,
+                direction: dir as i32,
+                cost: 0,
+            }).collect();
+        self.find_shortest_path_part_2(start, dirs2, init_heap2, &mut dist2);
+
+        let mut tiles = HashSet::new();
+        for y in 0..self.grid.len() {
+            for x in 0..self.grid[y].len() {
+                for dir in 0..dirs.len() {
+                    let tile = (y as i32, x as i32, dir as i32);
+                    if dist.get(&tile).unwrap_or(&0) + dist2.get(&tile).unwrap_or(&0) == best {
+                        tiles.insert((y, x));
+                    }
+                }
+            }
+        }
+        tiles.len()
+    }
+
+    fn find_shortest_path_part_2(
+        &self,
+        end: (i32, i32),
+        dirs: [(i32, i32); 4],
+        initial_heap: Vec<State2>,
+        dist: &mut HashMap<(i32, i32, i32), u32>,
+    ) -> u32 {
+        let mut best = u32::MAX;
+        let mut heap = BinaryHeap::from(initial_heap);
+        let mut seen = HashSet::from([]);
+        while let Some(State2 { y, x, direction, cost }) = heap.pop() {
+            if !dist.contains_key(&(y, x, direction)) {
+                *dist.entry((y, x, direction)).or_default() = cost;
+            }
+            if (y, x) == end && cost < best {
+                best = cost
+            }
+            if seen.insert((y, x, direction)) {
+                let (dy, dx) = dirs[direction as usize];
+                let (y2, x2) = (y + dy, x + dx);
+                if y2 >= 0 && y2 < self.grid.len() as i32 && x2 >= 0 && x2 < self.grid[0].len() as i32 {
+                    if self.get_char_at(y2, x2) != &'#' {
+                        heap.push(State2 {
+                            y: y2,
+                            x: x2,
+                            direction,
+                            cost: cost + 1,
+                        });
+                    }
+                    heap.extend([
+                        State2 {
+                            y,
+                            x,
+                            direction: (direction + 1) % 4,
+                            cost: cost + 1000,
+                        },
+                        State2 {
+                            y,
+                            x,
+                            direction: (direction + 3) % 4,
+                            cost: cost + 1000,
+                        },
+                    ]);
+                }
+            }
+        }
         best
     }
+
 
     fn is_within_bounds(&self, y: i32, x: i32) -> bool {
         y >= 0 && y < self.grid.len() as i32 && x >= 0 && x < self.grid[0].len() as i32
@@ -163,16 +275,16 @@ impl Maze {
     }
 }
 
-fn get_value(file_path: &str, part: Part) -> u32 {
+fn get_value(file_path: &str, part: Part) -> usize {
     let file_contents =
         fs::read_to_string(file_path).expect("Should have been able to read the file");
 
     let maze = Maze::new(&file_contents);
 
     if part == Part1 {
-        maze.find_shortest_path_score()
+        maze.find_shortest_path_score() as usize
     } else {
-        4
+        maze.get_number_of_tiles_on_shortest_paths()
     }
 }
 
@@ -201,12 +313,12 @@ mod tests {
     #[test]
     fn returns_expected_value_test_data_for_part_2() {
         let value = get_value("./test.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 64);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
         let value = get_value("./input.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 494);
     }
 }
