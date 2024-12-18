@@ -1,11 +1,4 @@
-use crate::Part::{Part1, Part2};
 use std::fs;
-
-#[derive(PartialEq, Debug)]
-enum Part {
-    Part1,
-    Part2,
-}
 
 #[derive(Debug, Default)]
 struct Computer {
@@ -79,10 +72,54 @@ impl Computer {
 
         result
     }
+
+    fn reset(&mut self) {
+        self.a = 0;
+        self.b = 0;
+        self.c = 0;
+        self.instruction_pointer = 0;
+    }
+    
+    fn run_part_2(&mut self) -> Vec<i64> {
+        let mut saved = Vec::new();
+
+        for a in 1..1024 {
+            self.reset();
+            self.a = a;
+            let output = self.run();
+            if output[0] == self.program[0] as i64 {
+                saved.push(a);
+            }
+        }
+
+        let mut pos = 1;
+        while pos < self.program.len() {
+            let mut next = Vec::new();
+
+            for consider in saved {
+                for bit in 0..8 {
+                    let num = (bit << (7 + 3 * pos)) | consider;
+                    self.reset();
+                    self.a = num;
+                    let output = self.run();
+
+                    if output.len() > pos && output[pos] == self.program[pos] as i64 {
+                        next.push(num);
+                    }
+                }
+            }
+            pos += 1;
+
+            saved = next;
+        }
+        
+        saved
+    }
 }
 
 fn format_result(result: Vec<i64>) -> String {
-    let formatted_result = result.iter()
+    let formatted_result = result
+        .iter()
         .map(ToString::to_string)
         .collect::<Vec<_>>()
         .join(",");
@@ -90,51 +127,58 @@ fn format_result(result: Vec<i64>) -> String {
     formatted_result
 }
 
-fn get_output_string(file_path: &str, part: Part) -> String {
+fn get_output_string(file_path: &str) -> String {
     let file_contents =
         fs::read_to_string(file_path).expect("Should have been able to read the file");
 
     let mut computer = Computer::from_input(&file_contents);
 
-    if part == Part1 {
-        let result = computer.run();
-        format_result(result)
-    } else {
-        "2".to_string()
-    }
+    let result = computer.run();
+    
+    format_result(result)
+}
+
+fn get_lowest_positive_initial_value_for_register_a(file_path: &str) -> i64 {
+    let file_contents =
+        fs::read_to_string(file_path).expect("Should have been able to read the file");
+    
+    let mut computer = Computer::from_input(&file_contents);
+    
+    let result = computer.run_part_2();
+
+    result.iter().cloned().min().unwrap()
 }
 
 fn main() {
-    println!("Part 1 value: {}", get_output_string("./input.txt", Part1));
-    println!("Part 2 value: {}", get_output_string("./input.txt", Part2));
+    println!("Output string: {}", get_output_string("./input.txt"));
+    println!("Lowest positive initial value: {}", get_lowest_positive_initial_value_for_register_a("./input.txt"));
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::get_output_string;
-    use crate::Part::{Part1, Part2};
+    use crate::{get_output_string, get_lowest_positive_initial_value_for_register_a};
 
     #[test]
-    fn returns_expected_value_test_data_for_part_1() {
-        let value = get_output_string("./test.txt", Part1);
+    fn returns_expected_output_string_for_test_data() {
+        let value = get_output_string("./test.txt");
         assert_eq!(value, "4,6,3,5,6,3,5,2,1,0");
     }
 
     #[test]
-    fn returns_expected_value_for_input_data_for_part_1() {
-        let value = get_output_string("./input.txt", Part1);
+    fn returns_expected_output_string_for_input_data() {
+        let value = get_output_string("./input.txt");
         assert_eq!(value, "4,0,4,7,1,2,7,1,6");
     }
 
     #[test]
-    fn returns_expected_value_test_data_for_part_2() {
-        let value = get_output_string("./test.txt", Part2);
-        assert_eq!(value, "2");
+    fn returns_expected_lowest_positive_initial_value_test_data() {
+        let value = get_lowest_positive_initial_value_for_register_a("./test-2.txt");
+        assert_eq!(value, 117440);
     }
 
     #[test]
-    fn returns_expected_value_for_input_data_for_part_2() {
-        let value = get_output_string("./input.txt", Part2);
-        assert_eq!(value, "2");
+    fn returns_expected_lowest_positive_initial_value_for_input_data() {
+        let value = get_lowest_positive_initial_value_for_register_a("./input.txt");
+        assert_eq!(value, 202322348616234);
     }
 }
