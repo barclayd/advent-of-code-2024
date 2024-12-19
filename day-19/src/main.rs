@@ -10,50 +10,74 @@ enum Part {
 
 #[derive(Debug, Default)]
 struct Cache {
-    cache: HashMap<String, usize>,
+    memo: HashMap<String, usize>,
 }
 
 impl Cache {
-    fn can_make_design(&mut self, design: &str, patterns: &[String]) -> usize {
+    fn count_valid_designs(&mut self, design: &str, patterns: &[String]) -> usize {
         if design.is_empty() {
             return 1;
         }
-        if let Some(design_count) = self.cache.get(design) {
-            return *design_count;
+        
+        if let Some(&count) = self.memo.get(design) {
+            return count;
         }
 
         let count = patterns
             .iter()
             .filter(|pattern| design.starts_with(*pattern))
-            .map(|pattern| self.can_make_design(&design[pattern.len()..], patterns))
+            .map(|pattern| self.count_valid_designs(&design[pattern.len()..], patterns))
             .sum();
-        self.cache.insert(design.to_string(), count);
+            
+        self.memo.insert(design.to_string(), count);
         count
     }
 }
 
-fn get_value(file_path: &str, part: Part) -> usize {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
+struct DesignParser {
+    patterns: Vec<String>,
+    designs: Vec<String>,
+}
 
-    let mut lines = file_contents.lines();
-    
-    let patterns: Vec<String> = lines
-        .next()
-        .unwrap_or_default()
-        .split(", ")
-        .map(String::from)
-        .collect();
+impl DesignParser {
+    fn from_file(file_path: &str) -> std::io::Result<Self> {
+        let contents = fs::read_to_string(file_path)?;
+        let mut lines = contents.lines();
         
-    let designs = lines.map(String::from).skip(1).collect::<Vec<String>>();
-    
-    if part == Part1 {
-        let mut cache = Cache::default();
-        designs.iter().filter(|design| cache.can_make_design(design, &*patterns) > 0).count()
-    } else {
-        let mut cache = Cache::default();
-        designs.iter().map(|design| cache.can_make_design(design, &*patterns)).sum()
+        let patterns = lines
+            .next()
+            .unwrap_or_default()
+            .split(", ")
+            .map(String::from)
+            .collect();
+            
+        let designs = lines.skip(1)
+            .map(String::from)
+            .collect();
+            
+        Ok(Self { patterns, designs })
     }
+    
+    fn count_designs(&self, part: Part) -> usize {
+        let mut cache = Cache::default();
+        match part {
+            Part1 => self.designs
+                .iter()
+                .filter(|design| cache.count_valid_designs(design, &self.patterns) > 0)
+                .count(),
+            Part2 => self.designs
+                .iter()
+                .map(|design| cache.count_valid_designs(design, &self.patterns))
+                .sum()
+        }
+    }
+}
+
+fn get_value(file_path: &str, part: Part) -> usize {
+    let parser = DesignParser::from_file(file_path)
+        .expect("Failed to parse input file");
+    
+    parser.count_designs(part)
 }
 
 fn main() {
