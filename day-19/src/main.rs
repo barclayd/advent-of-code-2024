@@ -47,15 +47,12 @@ fn get_value(file_path: &str, part: Part) -> usize {
         
     let designs = lines.map(String::from).skip(1).collect::<Vec<String>>();
     
-    println!("{:?}", patterns);
-    println!("{:?}", designs);
-    
-
     if part == Part1 {
         let mut cache = Cache::default();
         designs.iter().filter(|design| cache.can_make_design(design, &*patterns) > 0).count()
     } else {
-        4
+        let mut cache = Cache::default();
+        designs.iter().map(|design| cache.can_make_design(design, &*patterns)).sum()
     }
 }
 
@@ -84,12 +81,12 @@ mod tests {
     #[test]
     fn returns_expected_value_test_data_for_part_2() {
         let value = get_value("./test.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 16);
     }
 
     #[test]
     fn returns_expected_value_for_input_data_for_part_2() {
         let value = get_value("./input.txt", Part2);
-        assert_eq!(value, 4);
+        assert_eq!(value, 662726441391898);
     }
 }

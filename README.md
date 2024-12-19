@@ -74,7 +74,7 @@ This project uses GitHub Actions for continuous integration. The workflow:
 The workflow configuration can be found in `.github/workflows/ci.yml`.
 These run in a parallelized matrix.
 
-## Progress (36/50 ⭐️)
+## Progress (38/50 ⭐️)
 
 | Day | Challenge                                                           | Stars |
 |-----|---------------------------------------------------------------------|---|
@@ -96,4 +96,4 @@ These run in a parallelized matrix.
 | 16   | [Reindeer Maze](https://adventofcode.com/2024/day/16) | ⭐⭐ |
 | 17   | [Chronospatial Computer](https://adventofcode.com/2024/day/17) | ⭐⭐ |
 | 18   | [RAM Run](https://adventofcode.com/2024/day/18) | ⭐⭐ |
-| 19   | [Linen Layout](https://adventofcode.com/2024/day/19) | ★★ |
+| 19   | [Linen Layout](https://adventofcode.com/2024/day/19) | ⭐⭐ |
