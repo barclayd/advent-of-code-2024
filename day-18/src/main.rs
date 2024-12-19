@@ -51,13 +51,18 @@ fn get_coordinates(file_path: &str) -> String {
         })
         .collect();
 
-    for limit in 1024..list.len() {
-        if search(list.clone(), limit).is_none() {
-            return format!("{},{}", list[limit-1].0, list[limit-1].1)
+    let mut min = 0;
+    let mut max = list.len();
+    
+    while max > min {
+        let mid = (max + min) / 2;
+        if search(list.clone(), mid).is_none() {
+            max = mid;
+        } else {
+            min = mid + 1;
         }
     }
-
-    panic!("No solution found");
+    format!("{},{}", list[max-1].0, list[max-1].1)
 }
 
 fn main() {
