@@ -98,3 +98,5 @@ These run in a parallelized matrix.
 | 18   | [RAM Run](https://adventofcode.com/2024/day/18) | ⭐⭐ |
 | 19   | [Linen Layout](https://adventofcode.com/2024/day/19) | ⭐⭐ |
 | 20   | [Race Condition](https://adventofcode.com/2024/day/20) | ⭐⭐ |
+| 22   | [Monkey Market](https://adventofcode.com/2024/day/22) | ★★ |
+| 23   | [LAN Party](https://adventofcode.com/2024/day/23) | ⭐⭐ |
