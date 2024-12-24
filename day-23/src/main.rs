@@ -4,68 +4,87 @@ use std::fs;
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 
-fn get_graph(file_path: &str) -> HashMap<String, Vec<String>> {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
-
-    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
-    file_contents
-        .lines()
-        .map(|l| l.split_once('-').unwrap())
-        .for_each(|(a, b)| {
-            graph.entry(a.to_string()).or_default().push(b.to_string());
-            graph.entry(b.to_string()).or_default().push(a.to_string());
-        });
-
-    graph
+struct Graph {
+    adjacency: HashMap<String, Vec<String>>,
 }
 
-fn get_password(file_path: &str) -> String {
-    let graph = get_graph(file_path);
+impl Graph {
+    fn from_file(file_path: &str) -> Self {
+        let file_contents = 
+            fs::read_to_string(file_path).expect("Should have been able to read the file");
 
-    let highest_degree = graph.values().map(|v| v.len()).max().unwrap();
-    let mut max_clique = Vec::new();
-    while max_clique.len() < highest_degree {
-        let mut ks = graph.keys().collect_vec();
-        ks.shuffle(&mut rand::rng());
+        let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
+        file_contents
+            .lines()
+            .filter_map(|l| l.split_once('-'))
+            .for_each(|(a, b)| {
+                adjacency.entry(a.to_string()).or_default().push(b.to_string());
+                adjacency.entry(b.to_string()).or_default().push(a.to_string());
+            });
 
-        let mut clique: Vec<&str> = Vec::new();
-        for k in ks {
-            if clique.iter().all(|c| graph[*c].contains(k)) {
-                let _ = &clique.push(k);
+        Self { adjacency }
+    }
+
+    fn find_max_clique(&self) -> Vec<String> {
+        let highest_degree = self.adjacency.values().map(|v| v.len()).max().unwrap();
+        let mut max_clique = Vec::new();
+
+        while max_clique.len() < highest_degree {
+            let mut candidates = self.adjacency.keys().cloned().collect_vec();
+            candidates.shuffle(&mut rand::rng());
+
+            let mut current_clique = Vec::new();
+            for candidate in candidates {
+                if current_clique.iter()
+                    .all(|c| self.adjacency[c].contains(&candidate)) 
+                {
+                    current_clique.push(candidate);
+                }
+            }
+
+            if current_clique.len() > max_clique.len() {
+                max_clique = current_clique;
             }
         }
 
-        if clique.len() > max_clique.len() {
-            max_clique = clique;
-        }
+        max_clique
     }
 
-    max_clique.iter().sorted().join(",")
-}
-
-fn get_tri_clique(file_path: &str) -> i32 {
-    let graph = get_graph(file_path);
-
-    let ks = graph.keys().sorted().collect_vec();
-    let mut tri_cliques = 0;
-    for (i, a) in ks.iter().enumerate() {
-        for j in (i + 1)..ks.len() {
-            for k in (j + 1)..ks.len() {
-                let b = ks[j];
-                let c = ks[k];
-                if (a.starts_with('t') || b.starts_with('t') || c.starts_with('t'))
-                    && graph[b].contains(a)
-                    && graph[c].contains(a)
-                    && graph[c].contains(b)
-                {
-                    tri_cliques += 1;
+    fn count_tri_cliques(&self) -> i32 {
+        let vertices = self.adjacency.keys().sorted().collect_vec();
+        
+        let mut count = 0;
+        for (i, a) in vertices.iter().enumerate() {
+            for (j, b) in vertices[i + 1..].iter().enumerate() {
+                for c in vertices[i + j + 2..].iter() {
+                    if self.is_tri_clique(a, b, c) {
+                        count += 1;
+                    }
                 }
             }
         }
+        count
     }
 
-    tri_cliques
+    fn is_tri_clique(&self, a: &&String, b: &&String, c: &&String) -> bool {
+        (a.starts_with('t') || b.starts_with('t') || c.starts_with('t'))
+            && self.adjacency[*b].contains(*a)
+            && self.adjacency[*c].contains(*a)
+            && self.adjacency[*c].contains(*b)
+    }
+}
+
+fn get_password(file_path: &str) -> String {
+    let graph = Graph::from_file(file_path);
+    graph.find_max_clique()
+        .iter()
+        .sorted()
+        .join(",")
+}
+
+fn get_tri_clique(file_path: &str) -> i32 {
+    let graph = Graph::from_file(file_path);
+    graph.count_tri_cliques()
 }
 
 fn main() {
