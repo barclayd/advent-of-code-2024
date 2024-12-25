@@ -1,42 +1,57 @@
-use itertools::Itertools;
 use std::collections::HashMap;
+use itertools::Itertools;
 use std::fs;
 
-fn get_value_for_part_1(file_path: &str) -> u64 {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
+struct Circuit<'a> {
+    values: HashMap<&'a str, u8>,
+    gates: HashMap<&'a str, (&'a str, &'a str, &'a str)>,
+    outputs: Vec<&'a str>,
+}
 
-    let (init, conn) = file_contents
-        .split_once("\n\n")
-        .expect("should have an empty line");
-    let mut w = HashMap::new();
-    for line in init.lines() {
-        let (id, v) = line.split_once(": ").expect("should have `: `");
-        w.insert(id, v.parse::<u8>().expect("must be a number"));
-    }
-    let mut g = HashMap::new();
-    let mut og = HashMap::new();
-    let mut outs = vec![];
-    for line in conn.lines() {
-        let (gate, out) = line.split_once(" -> ").expect("must have ` -> `");
-        let (a, op, b) = gate.split(' ').collect_tuple().expect("");
-        g.insert((a, op, b), out);
-        og.insert(out, (a, op, b));
-        if out.starts_with('z') {
-            outs.push(out);
+impl<'a> Circuit<'a> {
+    fn from_input(init: &'a str, conn: &'a str) -> Self {
+        let mut values = HashMap::new();
+        for line in init.lines() {
+            let (id, v) = line.split_once(": ").expect("should have `: `");
+            values.insert(id, v.parse::<u8>().expect("must be a number"));
         }
-    }
-    fn dfs<'a>(
-        id: &'a str,
-        w: &mut HashMap<&'a str, u8>,
-        og: &HashMap<&str, (&'a str, &str, &'a str)>,
-    ) -> u8 {
-        if let Some(v) = w.get(id) {
-            return *v;
+
+        let mut gates = HashMap::new();
+        let mut outputs = vec![];
+        
+        for line in conn.lines() {
+            let (gate, out) = line.split_once(" -> ").expect("must have ` -> `");
+            let (a, op, b) = gate.split(' ').collect_tuple().expect("invalid gate format");
+            gates.insert(out, (a, op, b));
+            if out.starts_with('z') {
+                outputs.push(out);
+            }
         }
-        let (a, op, b) = og[id];
-        let va = dfs(a, w, og);
-        let vb = dfs(b, w, og);
+
+        outputs.sort_unstable();
+        outputs.reverse();
+        
+        Self { values, gates, outputs }
+    }
+
+    fn evaluate(&mut self) -> u64 {
+        let outputs = self.outputs.clone();
+        let mut result = 0;
+        for &output in &outputs {
+            let bit = self.dfs(output);
+            result = (result << 1) | (bit as u64);
+        }
+        result
+    }
+
+    fn dfs(&mut self, id: &'a str) -> u8 {
+        if let Some(&v) = self.values.get(id) {
+            return v;
+        }
+
+        let (a, op, b) = self.gates[id];
+        let va = self.dfs(a);
+        let vb = self.dfs(b);
 
         let res = match op {
             "AND" => va & vb,
@@ -44,41 +59,53 @@ fn get_value_for_part_1(file_path: &str) -> u64 {
             "OR" => va | vb,
             _ => panic!("unsupported op"),
         };
-        w.insert(id, res);
+        
+        self.values.insert(id, res);
         res
     }
-
-    outs.sort_unstable();
-    outs.reverse();
-    let res = outs.iter().map(|&o| dfs(o, &mut w, &og)).collect_vec();
-    res.iter().fold(0, |r, &t| r * 2 + t as u64)
 }
 
-fn get_value_for_part_2(file_path: &str) -> String {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
+struct WireAnalyzer<'a> {
+    wire_map: HashMap<&'a str, Vec<(&'a str, &'a str)>>,
+    gate_connections: Vec<[&'a str; 4]>,
+}
 
-    let (init, conn) = file_contents
-        .split_once("\n\n")
-        .expect("should have an empty line");
-    let mut wire_map: HashMap<&str, Vec<(&str, &str)>> = HashMap::default();
-    let mut gate_connections = vec![];
-    for line in conn.lines() {
-        let (gate, out) = line.split_once(" -> ").expect("must have ` -> `");
-        let (a, op, b) = gate.split(' ').collect_tuple().expect("");
-        gate_connections.push([a, op, b, out]);
+impl<'a> WireAnalyzer<'a> {
+    fn from_input(conn: &'a str) -> Self {
+        let mut wire_map: HashMap<&str, Vec<(&str, &str)>> = HashMap::default();
+        let mut gate_connections = vec![];
+
+        for line in conn.lines() {
+            let (gate, out) = line.split_once(" -> ").expect("must have ` -> `");
+            let (a, op, b) = gate.split(' ').collect_tuple().expect("invalid gate format");
+            gate_connections.push([a, op, b, out]);
+        }
+
+        for &[lhs, op, rhs, ret] in &gate_connections {
+            wire_map.entry(lhs).or_default().push((op, ret));
+            wire_map.entry(rhs).or_default().push((op, ret));
+        }
+
+        Self { wire_map, gate_connections }
     }
 
-    for &[lhs, op, rhs, ret] in gate_connections.iter() {
-        wire_map.entry(lhs).or_insert(vec![]).push((op, ret));
-        wire_map.entry(rhs).or_insert(vec![]).push((op, ret));
+    fn find_wrong_outputs(&self) -> String {
+        let mut wrong_outputs = vec![];
+
+        for &[lhs, op, rhs, ret] in &self.gate_connections {
+            if !self.is_valid_gate(lhs, op, rhs, ret) {
+                wrong_outputs.push(ret);
+            }
+        }
+
+        wrong_outputs.sort_unstable();
+        wrong_outputs.join(",")
     }
 
-    let mut wrong_outputs = vec![];
-    for &[lhs, op, rhs, ret] in gate_connections.iter() {
-        let chained_ops = wire_map.get(&ret);
-        let chained_ops_contain =
-            |op| chained_ops.is_some_and(|v| v.iter().find(|a| a.0 == op).is_some());
+    fn is_valid_gate(&self, lhs: &str, op: &str, rhs: &str, ret: &str) -> bool {
+        let chained_ops = self.wire_map.get(ret);
+        let chained_ops_contain = |op| 
+            chained_ops.is_some_and(|v| v.iter().any(|a| a.0 == op));
 
         let has_chained_xor = chained_ops_contain("XOR");
         let has_chained_and = chained_ops_contain("AND");
@@ -89,45 +116,37 @@ fn get_value_for_part_2(file_path: &str) -> String {
         let outputs_bit = ret.starts_with('z');
         let outputs_last_bit = ret == "z45";
 
-        let valid = match op {
-            "XOR" => {
-                if !takes_input_bit && outputs_bit {
-                    true
-                } else if takes_input_bit && has_chained_xor {
-                    true
-                } else if takes_first_input && outputs_bit {
-                    true
-                } else {
-                    false
-                }
-            }
-            "OR" => {
-                if outputs_last_bit || (has_chained_and && has_chained_xor) {
-                    true
-                } else {
-                    false
-                }
-            }
-            "AND" => {
-                if has_chained_or {
-                    true
-                } else if takes_first_input {
-                    true
-                } else {
-                    false
-                }
-            }
-            _ => {
-                unreachable!()
-            }
-        };
-        if !valid {
-            wrong_outputs.push(ret);
+        match op {
+            "XOR" => !takes_input_bit && outputs_bit 
+                || takes_input_bit && has_chained_xor 
+                || takes_first_input && outputs_bit,
+            "OR" => outputs_last_bit || (has_chained_and && has_chained_xor),
+            "AND" => has_chained_or || takes_first_input,
+            _ => unreachable!()
         }
     }
+}
 
-    wrong_outputs.sort_unstable();
-    wrong_outputs.join(",").to_string()
+fn get_value_for_part_1(file_path: &str) -> u64 {
+    let contents = fs::read_to_string(file_path)
+        .expect("Should have been able to read the file");
+    let (init, conn) = contents
+        .split_once("\n\n")
+        .expect("should have an empty line");
+    
+    let mut circuit = Circuit::from_input(init, conn);
+    circuit.evaluate()
+}
+
+fn get_value_for_part_2(file_path: &str) -> String {
+    let contents = fs::read_to_string(file_path)
+        .expect("Should have been able to read the file");
+    let (_, conn) = contents
+        .split_once("\n\n")
+        .expect("should have an empty line");
+    
+    let analyzer = WireAnalyzer::from_input(conn);
+    analyzer.find_wrong_outputs()
 }
 
 fn main() {
