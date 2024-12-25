@@ -77,7 +77,7 @@ These run in a parallelized matrix.
 ## Progress (50/50 ⭐️)
 
 | Day | Challenge                                                      | Stars |
-|-----|----------------------------------------------------------------|--|
+|-----|----------------------------------------------------------------|-------|
 | 1   | [Historian Hysteria](https://adventofcode.com/2024/day/1)      | ⭐️⭐️ |
 | 2   | [Red-Nosed Reports](https://adventofcode.com/2024/day/2)       | ⭐️⭐️ |
 | 3   | [Mull It Over](https://adventofcode.com/2024/day/3)            | ⭐️⭐️ |
@@ -102,3 +102,4 @@ These run in a parallelized matrix.
 | 22  | [Monkey Market](https://adventofcode.com/2024/day/22)          | ⭐⭐ |
 | 23  | [LAN Party](https://adventofcode.com/2024/day/23)              | ⭐⭐ |
 | 24  | [Crossed Wires](https://adventofcode.com/2024/day/24)          | ⭐⭐ |
+| 25  | [Code Chronicle](https://adventofcode.com/2024/day/25)         | ⭐⭐ |
