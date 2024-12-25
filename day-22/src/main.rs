@@ -11,19 +11,9 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 const PRUNE: isize = 16777216;
 
-fn get_input(file_path: &str) -> Vec<isize> {
-    fs::read_to_string(file_path)
-        .expect("Should have been able to read the file")
-        .trim()
-        .lines()
-        .map(|elem| elem.parse())
-        .collect::<Result<Vec<isize>, _>>()
-        .unwrap()
-}
-
-fn next_number(previous_secret: isize) -> isize {
-    let mut step_1 = previous_secret * 64;
-    step_1 ^= previous_secret;
+fn next_number(previous: isize) -> isize {
+    let mut step_1 = previous * 64;
+    step_1 ^= previous;
     step_1 %= PRUNE;
 
     let mut step_2 = step_1 / 32;
@@ -36,25 +26,39 @@ fn next_number(previous_secret: isize) -> isize {
     final_step % PRUNE
 }
 
-fn get_value(file_path: &str, part: Part) -> isize {
-    if part == Part1 {
-        let starting_secrets = get_input(file_path);
-        let mut total = 0;
+struct SecretProcessor {
+    secrets: Vec<isize>,
+}
 
-        for secret in starting_secrets {
+impl SecretProcessor {
+    fn from_file(file_path: &str) -> Self {
+        let secrets = fs::read_to_string(file_path)
+            .expect("Should have been able to read the file")
+            .trim()
+            .lines()
+            .map(|elem| elem.parse())
+            .collect::<Result<Vec<isize>, _>>()
+            .unwrap();
+            
+        Self { secrets }
+    }
+
+    fn process_part1(&self) -> isize {
+        let mut total = 0;
+        for &secret in &self.secrets {
             let mut temp = secret;
             for _ in 0..2_000 {
                 temp = next_number(temp);
             }
             total += temp;
         }
-
         total
-    } else {
-        let starting_secrets = get_input(file_path);
-        let all_secrets: Vec<Vec<isize>> = starting_secrets
-            .into_iter()
-            .map(|code| {
+    }
+
+    fn process_part2(&self) -> isize {
+        let all_secrets: Vec<Vec<isize>> = self.secrets
+            .iter()
+            .map(|&code| {
                 let mut secrets = vec![code];
                 for _ in 0..2_000 {
                     secrets.push(next_number(*secrets.last().unwrap()));
@@ -88,6 +92,14 @@ fn get_value(file_path: &str, part: Part) -> isize {
             .unwrap();
 
         *total
+    }
+}
+
+fn get_value(file_path: &str, part: Part) -> isize {
+    let processor = SecretProcessor::from_file(file_path);
+    match part {
+        Part1 => processor.process_part1(),
+        Part2 => processor.process_part2(),
     }
 }
 
