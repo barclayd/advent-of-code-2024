@@ -1,4 +1,5 @@
 use crate::Part::{Part1, Part2};
+use std::collections::{HashMap, VecDeque};
 use std::fs;
 
 #[derive(PartialEq, Debug)]
@@ -6,56 +7,231 @@ enum Part {
     Part1,
     Part2,
 }
-
-use std::{
-    collections::{HashMap, VecDeque},
-    usize,
-};
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum Keys {
-    Key0,
-    Key1,
-    Key2,
-    Key3,
-    Key4,
-    Key5,
-    Key6,
-    Key7,
-    Key8,
-    Key9,
-    KeyA,
-    KeyUp,
-    KeyRight,
-    KeyDown,
-    KeyLeft,
+enum Key {
+    Num0,
+    Num1,
+    Num2,
+    Num3,
+    Num4,
+    Num5,
+    Num6,
+    Num7,
+    Num8,
+    Num9,
+    A,
+    Up,
+    Right,
+    Down,
+    Left,
     Empty,
 }
 
-use Keys::*;
+use Key::*;
 
-fn get_input(file_path: &str) -> Vec<(Vec<Keys>, usize)> {
-    let file_contents =
-        fs::read_to_string(file_path).expect("Should have been able to read the file");
+struct Keypad {
+    layout: HashMap<(usize, usize), Key>,
+}
 
-    file_contents
+impl Keypad {
+    fn numpad() -> Self {
+        let layout = vec![
+            ((0, 0), Num7),
+            ((0, 1), Num8),
+            ((0, 2), Num9),
+            ((1, 0), Num4),
+            ((1, 1), Num5),
+            ((1, 2), Num6),
+            ((2, 0), Num1),
+            ((2, 1), Num2),
+            ((2, 2), Num3),
+            ((3, 0), Empty),
+            ((3, 1), Num0),
+            ((3, 2), A),
+        ]
+        .into_iter()
+        .collect();
+        Self { layout }
+    }
+
+    fn control() -> Self {
+        let layout = vec![
+            ((0, 0), Empty),
+            ((0, 1), Up),
+            ((0, 2), A),
+            ((1, 0), Left),
+            ((1, 1), Down),
+            ((1, 2), Right),
+        ]
+        .into_iter()
+        .collect();
+        Self { layout }
+    }
+
+    fn find_all_shortest_paths(&self) -> HashMap<Key, HashMap<Key, Vec<Vec<Key>>>> {
+        self.layout
+            .iter()
+            .map(|(coord, key)| (*key, self.find_shortest_paths(*coord)))
+            .collect()
+    }
+
+    fn find_shortest_paths(&self, start: (usize, usize)) -> HashMap<Key, Vec<Vec<Key>>> {
+        let mut paths: HashMap<Key, Vec<Vec<Key>>> = HashMap::new();
+        let mut queue: VecDeque<((usize, usize), Vec<Key>)> = vec![(start, vec![])].into();
+        let start_key = self.layout[&start];
+        paths.insert(start_key, vec![]);
+
+        while let Some((coord, path)) = queue.pop_front() {
+            let current_key = self.layout[&coord];
+            let shortest = paths.entry(current_key).or_default();
+
+            let mut deduped_shortest = shortest.last().unwrap_or(&vec![]).clone();
+            deduped_shortest.dedup();
+            let mut deduped_path = path.clone();
+            deduped_path.dedup();
+
+            if deduped_shortest.is_empty() || deduped_shortest.len() > deduped_path.len() {
+                *shortest = vec![path.clone()];
+            } else if deduped_shortest.len() == deduped_path.len() {
+                shortest.push(path.clone());
+            } else {
+                continue;
+            }
+
+            for (neighbor, direction) in self.get_neighbors(coord) {
+                if let Some(&key) = self.layout.get(&neighbor) {
+                    if key != Empty && key != start_key {
+                        let mut next_path = path.clone();
+                        next_path.push(direction);
+                        queue.push_back((neighbor, next_path));
+                    }
+                }
+            }
+        }
+
+        for paths in paths.values_mut() {
+            for path in paths.iter_mut() {
+                path.push(A);
+            }
+        }
+        paths
+    }
+
+    fn get_neighbors(&self, coord: (usize, usize)) -> [((usize, usize), Key); 4] {
+        [
+            ((coord.0.wrapping_sub(1), coord.1), Up),
+            ((coord.0, coord.1 + 1), Right),
+            ((coord.0 + 1, coord.1), Down),
+            ((coord.0, coord.1.wrapping_sub(1)), Left),
+        ]
+    }
+}
+
+struct PathFinder {
+    numpad_paths: HashMap<Key, HashMap<Key, Vec<Vec<Key>>>>,
+    control_paths: HashMap<Key, HashMap<Key, Vec<Vec<Key>>>>,
+}
+
+impl PathFinder {
+    fn new() -> Self {
+        let numpad_paths = Keypad::numpad().find_all_shortest_paths();
+        let control_paths = Keypad::control().find_all_shortest_paths();
+        Self {
+            numpad_paths,
+            control_paths,
+        }
+    }
+
+    fn find_complexity(&self, code: Vec<Key>, value: usize, max_depth: usize) -> usize {
+        let mut previous_key = A;
+        let mut total_len = 0;
+
+        for key in code {
+            total_len += self.find_recursive(
+                (previous_key, key),
+                max_depth,
+                0,
+                &mut HashMap::new(),
+                &mut HashMap::new(),
+            );
+            previous_key = key;
+        }
+
+        value * total_len
+    }
+
+    fn find_recursive(
+        &self,
+        path: (Key, Key),
+        max: usize,
+        current: usize,
+        memo: &mut HashMap<(Key, Key), HashMap<usize, usize>>,
+        last_at_level: &mut HashMap<usize, Key>,
+    ) -> usize {
+        if current == max {
+            return 1;
+        }
+
+        if let Some(cached) = memo.get(&path).and_then(|m| m.get(&current)) {
+            return *cached;
+        }
+
+        let paths = if current == 0 {
+            &self.numpad_paths
+        } else {
+            &self.control_paths
+        }
+        .get(&path.0)
+        .unwrap()
+        .get(&path.1)
+        .unwrap();
+
+        let last = *last_at_level.entry(current).or_insert(A);
+        let mut next_last = last;
+        let mut min_total = usize::MAX;
+
+        for possible_path in paths {
+            let mut sub_total = 0;
+            let mut previous = last;
+
+            for &part in possible_path {
+                sub_total +=
+                    self.find_recursive((previous, part), max, current + 1, memo, last_at_level);
+                previous = part;
+            }
+
+            if sub_total < min_total {
+                min_total = sub_total;
+                next_last = *possible_path.last().unwrap();
+            }
+        }
+
+        last_at_level.insert(current, next_last);
+        memo.entry(path).or_default().insert(current, min_total);
+        min_total
+    }
+}
+
+fn parse_input(file_path: &str) -> Vec<(Vec<Key>, usize)> {
+    fs::read_to_string(file_path)
+        .expect("Should have been able to read the file")
         .trim()
         .lines()
         .map(|line| {
             (
                 line.chars()
                     .map(|c| match c {
-                        '0' => Key0,
-                        '1' => Key1,
-                        '2' => Key2,
-                        '3' => Key3,
-                        '4' => Key4,
-                        '5' => Key5,
-                        '6' => Key6,
-                        '7' => Key7,
-                        '8' => Key8,
-                        '9' => Key9,
-                        'A' => KeyA,
+                        '0' => Num0,
+                        '1' => Num1,
+                        '2' => Num2,
+                        '3' => Num3,
+                        '4' => Num4,
+                        '5' => Num5,
+                        '6' => Num6,
+                        '7' => Num7,
+                        '8' => Num8,
+                        '9' => Num9,
+                        'A' => A,
                         _ => unreachable!(),
                     })
                     .collect(),
@@ -65,238 +241,16 @@ fn get_input(file_path: &str) -> Vec<(Vec<Keys>, usize)> {
         .collect()
 }
 
-fn find_shortests(
-    start: (usize, usize),
-    keypad: &HashMap<(usize, usize), Keys>,
-) -> HashMap<Keys, Vec<Vec<Keys>>> {
-    let mut paths: HashMap<Keys, Vec<Vec<Keys>>> = HashMap::new();
-
-    let mut to_do: VecDeque<((usize, usize), Vec<Keys>)> = vec![(start, vec![])].into();
-
-    let start_key = keypad.get(&start).unwrap();
-    paths.insert(*start_key, vec![]);
-
-    while let Some((coordinate, path)) = to_do.pop_front() {
-        let current_key = keypad.get(&coordinate).unwrap();
-
-        let shortest = paths.entry(*current_key).or_default();
-
-        let mut deduped_shortest = shortest.last().unwrap_or(&vec![]).clone();
-        deduped_shortest.dedup();
-        let mut deduped_path = path.clone();
-        deduped_path.dedup();
-
-        if deduped_shortest.is_empty() || deduped_shortest.len() > deduped_path.len() {
-            *shortest = vec![path.clone()];
-        } else if deduped_shortest.len() == deduped_path.len() {
-            (*shortest).push(path.clone());
-        } else {
-            continue;
-        }
-
-        let neighbors = [
-            ((coordinate.0.wrapping_sub(1), coordinate.1), KeyUp),
-            ((coordinate.0, coordinate.1 + 1), KeyRight),
-            ((coordinate.0 + 1, coordinate.1), KeyDown),
-            ((coordinate.0, coordinate.1.wrapping_sub(1)), KeyLeft),
-        ];
-
-        for (neighbor, direction) in neighbors {
-            if let Some(key) = keypad.get(&neighbor) {
-                if *key != Empty && key != start_key {
-                    let mut next_path = path.clone();
-                    next_path.push(direction);
-                    to_do.push_back((neighbor, next_path));
-                }
-            }
-        }
-    }
-    for sub_path in paths.values_mut() {
-        for path in sub_path.iter_mut() {
-            path.push(KeyA);
-        }
-    }
-    paths
-}
-
-fn find_all_shortests(
-    keypad: &HashMap<(usize, usize), Keys>,
-) -> HashMap<Keys, HashMap<Keys, Vec<Vec<Keys>>>> {
-    keypad
-        .iter()
-        .map(|(coord, key)| (*key, find_shortests(*coord, keypad)))
-        .collect()
-}
-
-fn find_recurse(
-    path: (Keys, Keys),
-    max: usize,
-    current: usize,
-    shortest_numpads: &HashMap<Keys, HashMap<Keys, Vec<Vec<Keys>>>>,
-    shortest_controls: &HashMap<Keys, HashMap<Keys, Vec<Vec<Keys>>>>,
-    memoization: &mut HashMap<(Keys, Keys), HashMap<usize, usize>>,
-    last_at_level: &mut HashMap<usize, Keys>,
-) -> usize {
-    if current == max {
-        1
-    } else {
-        if let Some(path_cost) = memoization.get(&(path.0, path.1)) {
-            if let Some(cost) = path_cost.get(&current) {
-                return *cost;
-            }
-        }
-
-        let next_path = (if current == 0 {
-            shortest_numpads
-        } else {
-            shortest_controls
-        })
-        .get(&path.0)
-        .unwrap()
-        .get(&path.1)
-        .unwrap();
-
-        let last = *last_at_level.entry(current).or_insert(KeyA);
-        let mut next_last = last;
-        let mut total = usize::MAX;
-
-        for possible_paths in next_path {
-            let mut sub_total = 0;
-            let mut previous = last;
-            for part in possible_paths {
-                let fragment_cost = find_recurse(
-                    (previous, *part),
-                    max,
-                    current + 1,
-                    shortest_numpads,
-                    shortest_controls,
-                    memoization,
-                    last_at_level,
-                );
-                previous = *part;
-                sub_total += fragment_cost;
-            }
-            if sub_total < total {
-                total = sub_total;
-                next_last = *possible_paths.last().unwrap();
-            }
-        }
-
-        last_at_level.insert(current, next_last);
-
-        let saved_path = memoization.entry(path).or_default();
-        saved_path.insert(current, total);
-
-        total
-    }
-}
-
 fn get_value(file_path: &str, part: Part) -> usize {
-    if part == Part1 {
-        let numpad: HashMap<(usize, usize), Keys> = vec![
-            ((0, 0), Key7),
-            ((0, 1), Key8),
-            ((0, 2), Key9),
-            ((1, 0), Key4),
-            ((1, 1), Key5),
-            ((1, 2), Key6),
-            ((2, 0), Key1),
-            ((2, 1), Key2),
-            ((2, 2), Key3),
-            ((3, 0), Empty),
-            ((3, 1), Key0),
-            ((3, 2), KeyA),
-        ]
+    let codes = parse_input(file_path);
+    let path_finder = PathFinder::new();
+
+    let max_depth = if part == Part1 { 3 } else { 26 };
+
+    codes
         .into_iter()
-        .collect();
-        let control: HashMap<(usize, usize), Keys> = vec![
-            ((0, 0), Empty),
-            ((0, 1), KeyUp),
-            ((0, 2), KeyA),
-            ((1, 0), KeyLeft),
-            ((1, 1), KeyDown),
-            ((1, 2), KeyRight),
-        ]
-        .into_iter()
-        .collect();
-
-        let codes = get_input(file_path);
-        let mut complexities = 0;
-        let shortests_paths_numpad = find_all_shortests(&numpad);
-        let shortests_paths_control = find_all_shortests(&control);
-
-        for (code, value) in codes {
-            let mut previous_key = KeyA;
-            let mut len = 0;
-            for key in code {
-                len += find_recurse(
-                    (previous_key, key),
-                    3,
-                    0,
-                    &shortests_paths_numpad,
-                    &shortests_paths_control,
-                    &mut HashMap::new(),
-                    &mut HashMap::new(),
-                );
-                previous_key = key;
-            }
-            complexities += value * len;
-        }
-
-        complexities
-    } else {
-        let numpad: HashMap<(usize, usize), Keys> = vec![
-            ((0, 0), Key7),
-            ((0, 1), Key8),
-            ((0, 2), Key9),
-            ((1, 0), Key4),
-            ((1, 1), Key5),
-            ((1, 2), Key6),
-            ((2, 0), Key1),
-            ((2, 1), Key2),
-            ((2, 2), Key3),
-            ((3, 0), Empty),
-            ((3, 1), Key0),
-            ((3, 2), KeyA),
-        ]
-        .into_iter()
-        .collect();
-        let control: HashMap<(usize, usize), Keys> = vec![
-            ((0, 0), Empty),
-            ((0, 1), KeyUp),
-            ((0, 2), KeyA),
-            ((1, 0), KeyLeft),
-            ((1, 1), KeyDown),
-            ((1, 2), KeyRight),
-        ]
-        .into_iter()
-        .collect();
-
-        let codes = get_input(file_path);
-        let mut complexities = 0;
-        let shortests_paths_numpad = find_all_shortests(&numpad);
-        let shortests_paths_control = find_all_shortests(&control);
-
-        for (code, value) in codes {
-            let mut previous_key = KeyA;
-            let mut len = 0;
-            for key in code {
-                len += find_recurse(
-                    (previous_key, key),
-                    26,
-                    0,
-                    &shortests_paths_numpad,
-                    &shortests_paths_control,
-                    &mut HashMap::new(),
-                    &mut HashMap::new(),
-                );
-                previous_key = key;
-            }
-            complexities += value * len;
-        }
-
-        complexities
-    }
+        .map(|(code, value)| path_finder.find_complexity(code, value, max_depth))
+        .sum()
 }
 
 fn main() {
